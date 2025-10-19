@@ -208,3 +208,7 @@ __marimo__/
 
 
 tfm_final_venv
+
+*.xlsx
+*.csv
+
