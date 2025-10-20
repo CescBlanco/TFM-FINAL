@@ -212,3 +212,11 @@ tfm_final_venv
 *.xlsx
 *.csv
 
+# Ignorar un archivo específico
+abonados.ipynb
+accessos.ipynb
+economia.ipynb
+servicios.ipynb
+archivo_final.ipynb
+
+
