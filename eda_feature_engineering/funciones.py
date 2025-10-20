@@ -1,3 +1,15 @@
+"""
+Este módulo contiene funciones para procesar datos de usuarios, servicios,
+pagos y accesos en un centro deportivo.
+
+Incluye:
+- Features de servicios extra (entrenamientos, fisioterapia, nutrición)
+- Features económicos basados en pagos y abonos
+- Features de comportamiento basados en accesos
+- Funciones de integración y limpieza final de dataset
+"""
+
+
 #IMPORTACIÓN LIBRERIAS NECESARIAS
 import numpy as np
 import pandas as pd

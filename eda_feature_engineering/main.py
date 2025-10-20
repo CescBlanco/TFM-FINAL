@@ -4,8 +4,7 @@ def main():
     print("Ejecutando análisis de abonados...")
     df_abonados = abonados.run()
     print(df_abonados)
-  
-    
+      
     print("\nEjecutando análisis de accessos...")
     df_accessos = accesos.run()
     print(df_accessos)
@@ -21,15 +20,13 @@ def main():
    
 
     # Por ejemplo, solo un mensaje:
-    print("Análisis completos y archivos generados.")
+    print("\n✅ Análisis completos y archivos generados.")
 
     print("\nProcesando el dataframe final para el modelo....")
     df_pre_modelo = archivo_final.run()
     print(df_pre_modelo)
 
 
-    print("Archivo final generado. Ya se puede pasar a crear el modelo!")
-
-
+    print("✅ Archivo final generado. Ya se puede pasar a crear el modelo!")
 if __name__ == "__main__":
     main()
