@@ -4,7 +4,10 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+import os
 import time
+from datetime import datetime
 
 from IPython.display import display
 from typing import Optional, Tuple
@@ -106,7 +109,25 @@ def eda_basica(df: pd.DataFrame, nombre_df: str = "DataFrame") -> None:
 
 
 
+
 #------------------------------------------------FUNCIONES MODELO------------------------------------------------------------
+
+def guardar_grafico(nombre_archivo: str, carpeta: str):
+    """
+    Guarda el gráfico actual como archivo PNG en la carpeta especificada.
+
+    Parámetros:
+    - nombre_archivo (str): nombre base del archivo (sin extensión).
+    - carpeta (str): ruta de la carpeta donde guardar la imagen.
+    """
+    if not os.path.exists(carpeta):
+        os.makedirs(carpeta)
+    
+    ruta = os.path.join(carpeta, f"{nombre_archivo}.png")
+    plt.savefig(ruta, bbox_inches="tight")
+    print(f"✅ Gráfico guardado en: {ruta}")
+
+
 def analizar_target_abandono(df: pd.DataFrame, target_col: str = 'Abandono', figsize: Tuple[int, int] = (10, 5),
                              style: str = 'whitegrid', context: str = 'notebook') -> None:
 
@@ -237,7 +258,7 @@ def separacion_df_inferencia_test_final(df: pd.DataFrame) -> Tuple[pd.DataFrame,
 
     return df_validacion, df_train
 
-def aplicacion_modelo(X: pd.DataFrame, y: pd.Series) -> Tuple:
+def aplicacion_modelo(X: pd.DataFrame, y: pd.Series, carpeta_imagenes: str) -> Tuple:
     """
     Realiza el entrenamiento, optimización (GridSearchCV), evaluación y comparación
     de varios modelos clásicos para clasificación.
@@ -342,6 +363,7 @@ def aplicacion_modelo(X: pd.DataFrame, y: pd.Series) -> Tuple:
     plt.ylabel("True Positive Rate")
     plt.title("Curva ROC de modelos")
     plt.legend(loc="lower right")
+    plt.savefig(os.path.join(carpeta_imagenes, "curva_ROC_modelos.png"))
     plt.show()
 
     # ==============================
@@ -375,13 +397,15 @@ def aplicacion_modelo(X: pd.DataFrame, y: pd.Series) -> Tuple:
         plt.barh(importances['Variable'], importances['Importancia'])
         plt.gca().invert_yaxis()
         plt.title(f"Top variables - {mejor_modelo['Modelo']}")
+        guardar_grafico(f"importancia_variables_{mejor_modelo['Modelo'].replace(' ', '_')}", carpeta_imagenes)
+
         plt.show()
     else:
         print("\n⚠️ Este modelo no tiene atributo 'feature_importances_'")
     
     return best_model, scaler
 
-def validacion_inferencia_testfinal(X: pd.DataFrame, scaler, best_model, df_validacion: pd.DataFrame) -> Optional[np.ndarray]:
+def validacion_inferencia_testfinal(X: pd.DataFrame, scaler, best_model, df_validacion: pd.DataFrame, carpeta_imagenes: str) -> Optional[np.ndarray]:
 
     """
     Realiza la validación del modelo final usando un conjunto de validación separado,
@@ -444,6 +468,7 @@ def validacion_inferencia_testfinal(X: pd.DataFrame, scaler, best_model, df_vali
         plt.ylabel("TPR")
         plt.title("Curva ROC - Inferencia Test final")
         plt.legend()
+        plt.savefig(os.path.join(carpeta_imagenes, "curva_ROC_inferencia_test"))
         plt.show()
     except Exception as e:
         print("Error en métricas o plot:", e)
@@ -473,3 +498,22 @@ def clasificar_riesgo(df_validation: pd.DataFrame, y_val_prob: np.ndarray) -> pd
     df_validation["Nivel_Riesgo"] = pd.cut(df_validation["Prob_Abandono"], bins=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
         labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],  include_lowest=True)
     return df_validation
+
+def guardar_resultados(df: pd.DataFrame, nombre_modelo: str):
+    """
+    Guarda el DataFrame resultante de un modelo en un archivo CSV y lo imprime por consola.
+
+    Args:
+        df (pd.DataFrame): DataFrame de validación.
+        nombre_modelo (str): Nombre identificativo del modelo (ej. 'modelo1').
+    """
+    print(f"\n✅ ¡{nombre_modelo.upper()} ENTRENADO CON ÉXITO!")
+
+    print("\n📊 Mostrando dataframe resultante:")
+    print(df)
+
+    ruta_archivo = f"data/resultados_{nombre_modelo.lower()}.csv"
+    df.to_csv(ruta_archivo, index=False)
+
+    print(f"\n💾 Guardando resultados en: {ruta_archivo}")
+    print(f"\n✅ ¡RESULTADOS DE {nombre_modelo.upper()} GUARDADOS CON ÉXITO!\n")
