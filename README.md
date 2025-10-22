@@ -74,3 +74,88 @@ ACCESOS
 | `PrimeraVisita`, `UltimaVisita`, `TiempoActivoDias`                                                                    | Historial total de actividad                                 | Bajo                                  | Mantener, útil para recencia y cohortes           |
 | `VisitasPrimerTrimestre`, `VisitasUltimoTrimestre`                                                                     | Intensidad al inicio y final del periodo                     | Bajo                                  | Mantener                                          |
 | `TieneAccesos`                                                                                                         | Booleano que indica si se registraron accesos                | Ninguno                               | Mantener como feature binaria                     |
+
+
+
+┌──────────────────────────────┐
+│         Usuario/API          │
+│  - Datos completos (JSON)    │
+│  - IdPersona / lista de IDs  │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│       Endpoint FastAPI       │
+│  /predecir/ /predecir_por_id │
+│  /predecir_por_ids           │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│ Validación de entradas       │
+│  - Columnas esperadas        │
+│  - Tipos de datos y bool → 0/1│
+│  - Valores no negativos      │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│   Escalado de variables      │
+│  - Cargar scaler MLflow      │
+│  - Transformar X             │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│ Carga modelo MLflow          │
+│  - Mejor run según AUC       │
+│  - Obtener run_id, versión   │
+│  - Características importantes│
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│  Predicción                  │
+│  - y_pred (0/1)              │
+│  - y_prob (probabilidad)     │
+│  - Nivel riesgo categórico   │
+│  - Feature importances       │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│ Formato de salida / guardado │
+│  - IdPersona / IdUsuario     │
+│  - Variables de entrada JSON │
+│  - Predicción y probabilidad │
+│  - Nivel de riesgo           │
+│  - Timestamp de consulta     │
+│  - Metadata: endpoint, runID, versión │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│ Almacenamiento               │
+│  - CSV (append)              │
+│  - Base de datos SQL (opcional) │
+│  - Parquet/DeltaLake (escalable) │
+└─────────────┬────────────────┘
+              │
+              ▼
+┌──────────────────────────────┐
+│ Auditoría y trazabilidad     │
+│  - Histórico de consultas    │
+│  - Reproducibilidad exacta   │
+│  - Métricas de uso del API   │
+└──────────────────────────────┘
+
+
+flowchart TD
+    A[Usuario / API] --> B[Endpoint FastAPI]
+    B --> C[Validación de entradas]
+    C --> D[Escalado de variables]
+    D --> E[Carga modelo MLflow]
+    E --> F[Predicción]
+    F --> G[Formato de salida / guardado]
+    G --> H[Almacenamiento]
+    H --> I[Auditoría y trazabilidad]
