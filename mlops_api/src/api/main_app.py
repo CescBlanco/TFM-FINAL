@@ -10,12 +10,27 @@ import joblib
 import json
 from datetime import datetime
 
-# --- PATH para guardar predicciones ---
-PREDICCIONES_PATH = "predicciones_api.csv"
+# PATH para guardar predicciones.
+PREDICCIONES_PATH = "data_mlops_api/predicciones_api.csv"
 mlflow.set_tracking_uri("file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns")
 
-# --- Función utilitaria para cargar el scaler dinámicamente ---
+# Función utilitaria para cargar el scaler dinámicamente.
 def obtener_scaler_dinamico(client, run_id):
+
+    """
+    Carga el scaler asociado a un modelo entrenado desde los artefactos en MLFlow.
+    
+    Parámetros:
+        client (MlflowClient): Cliente de MLFlow para acceder a los artefactos.
+        run_id (str): ID del run del modelo del que se desea cargar el scaler.
+
+    Retorna:
+        Scaler: Un objeto `Scaler` cargado desde los artefactos del modelo.
+
+    Lanza:
+        FileNotFoundError: Si no se encuentra el scaler en los artefactos del run.
+    """
+
     artifacts = client.list_artifacts(run_id)
     scaler_path = None
     for artifact in artifacts:
@@ -28,6 +43,18 @@ def obtener_scaler_dinamico(client, run_id):
     return joblib.load(local_path)
 
 def validar_columnas_esperadas(df, columnas_esperadas):
+
+    """
+    Valida que el DataFrame contenga las columnas esperadas.
+    
+    Parámetros:
+        df (pd.DataFrame): DataFrame con los datos a validar.
+        columnas_esperadas (list): Lista de nombres de columnas esperadas.
+
+    Retorna:
+        list: Lista de errores con las columnas faltantes o adicionales.
+    """
+
     columnas_faltantes = set(columnas_esperadas) - set(df.columns)
     columnas_extra = set(df.columns) - set(columnas_esperadas)
     errores = []
@@ -38,6 +65,19 @@ def validar_columnas_esperadas(df, columnas_esperadas):
     return errores
 
 def obtener_importancia_por_persona(modelo, X_scaled, features):
+
+    """
+    Obtiene la importancia de las características para cada persona usando un modelo.
+    
+    Parámetros:
+        modelo (sklearn model): El modelo entrenado para hacer predicciones.
+        X_scaled (np.array): Datos de entrada escalados para la predicción.
+        features (list): Lista de características utilizadas por el modelo.
+
+    Retorna:
+        pd.DataFrame: DataFrame con las importancias por persona.
+    """
+
     # Obtener las importancias globales (coeficientes o feature_importances_)
     feature_importances = modelo.feature_importances_ if hasattr(modelo, "feature_importances_") else modelo.coef_.flatten()
     
@@ -50,10 +90,25 @@ def obtener_importancia_por_persona(modelo, X_scaled, features):
     
     return importances_df
 
-def guardar_predicciones_api(idpersona, variables, pred, prob, nivel, endpoint, run_id, version_modelo=None):
+def guardar_predicciones_api(idpersona, variables, pred, prob, nivel, endpoint, run_id, importancia_variables=None):
     """
-    Guarda la predicción con todas las columnas necesarias.
+    Guarda las predicciones realizadas por el modelo en un archivo CSV para su posterior análisis.
+    
+    Parámetros:
+        idpersona (int): El ID de la persona a la que corresponde la predicción.
+        variables (dict): Variables de entrada utilizadas para la predicción.
+        pred (int): Predicción realizada por el modelo (0 o 1).
+        prob (float): Probabilidad asociada a la predicción.
+        nivel (str): Nivel de riesgo asignado a la predicción.
+        endpoint (str): El endpoint que hizo la predicción.
+        run_id (str): El ID del run de MLFlow relacionado con el modelo.
+        importancia_variables (pd.DataFrame, opcional): Importancia de las variables para esta predicción.
+    
+    Retorna:
+        None
     """
+
+    # Crear el registro con los resultados de la predicción
     registro = {
         "IdPersona": idpersona,
         "VariablesEntrada": json.dumps(variables, ensure_ascii=False),
@@ -63,10 +118,11 @@ def guardar_predicciones_api(idpersona, variables, pred, prob, nivel, endpoint, 
         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Endpoint": endpoint,
         "RunIDModelo": run_id,
-        "VersionModelo": version_modelo
+        "ImportanciaVariables": importancia_variables,
+
     }
 
-    # Si el CSV existe, anexamos, si no lo creamos
+    # Si el archivo de predicciones ya existe, se añaden nuevas filas, si no, se crea
     if os.path.exists(PREDICCIONES_PATH):
         pd.DataFrame([registro]).to_csv(PREDICCIONES_PATH, mode='a', index=False, header=False)
     else:
@@ -74,8 +130,19 @@ def guardar_predicciones_api(idpersona, variables, pred, prob, nivel, endpoint, 
 
 def obtener_mejor_modelo(experimento: str, metric_name: str = "AUC"):
     """
-    Obtiene el mejor modelo registrado en MLFlow basado en una métrica específica (por defecto AUC).
+    Obtiene el mejor modelo registrado en MLFlow basado en una métrica específica.
+    
+    Parámetros:
+        experimento (str): El nombre del experimento en MLFlow.
+        metric_name (str, opcional): La métrica a usar para la selección del mejor modelo (por defecto 'AUC').
+
+    Retorna:
+        tuple: El modelo entrenado, la información del mejor modelo y el scaler asociado.
+
+    Lanza:
+        ValueError: Si no se encuentran métricas para el experimento.
     """
+
     client = MlflowClient()
 
     # Obtener el experimento
@@ -143,24 +210,58 @@ def obtener_mejor_modelo(experimento: str, metric_name: str = "AUC"):
 # Aquí puedes definir el nombre del experimento y la métrica a usar
 modelo, mejor_info, scaler = obtener_mejor_modelo("Experimento_v3", metric_name="auc")
 
+
 print("Modelo cargado correctamente:", modelo)
 print("Detalles del mejor modelo:", mejor_info)
 print("Detalles del mejor scaler:", scaler)
 
 
-# === Cargar columnas esperadas ===
+# Cargar columnas esperadas.
 with open("src/api/columnas_modelo3.txt") as f:
     columnas_modelo3 = f.read().splitlines()
 
-# === Cargar dataset de validación (para endpoint por ID) ===
+# Cargar dataset de validación (para endpoint por ID).
 df_validation = pd.read_csv('data_mlops_api/df_validacion_inicial.csv')
 
-# === Inicializar API ===
+# Inicializar API
 app = FastAPI(title="API Abandono flexible")
 
-# ==== MODELOS DE DATOS ====
-
+# MODELOS DE DATOS
 class UserData(BaseModel):
+
+    """
+    Clase que representa los datos de entrada del usuario para la predicción de abandono.
+    
+    Atributos:
+        Edad (int): Edad de la persona. Debe ser mayor o igual a 18.
+        Sexo_Mujer (bool): Indica si el usuario es mujer (True) o no (False).
+        UsoServiciosExtra (bool): Indica si el usuario utiliza servicios extra (True) o no (False).
+        ratio_cantidad_2025_2024 (float): Ratio de la cantidad de visitas entre los años 2025 y 2024.
+        Diversidad_servicios_extra (int): Número de servicios extra que utiliza el usuario.
+        TienePagos (bool): Indica si el usuario tiene pagos (True) o no (False).
+        TotalVisitas (int): Total de visitas realizadas por el usuario.
+        DiasActivo (int): Número de días activos del usuario.
+        VisitasUlt90 (int): Número de visitas del usuario en los últimos 90 días.
+        VisitasUlt180 (int): Número de visitas del usuario en los últimos 180 días.
+        TieneAccesos (bool): Indica si el usuario tiene accesos (True) o no (False).
+        VisitasPrimerTrimestre (int): Número de visitas realizadas en el primer trimestre del año.
+        VisitasUltimoTrimestre (int): Número de visitas realizadas en el último trimestre del año.
+        DiaFav_domingo (bool): Indica si el domingo es el día favorito del usuario (True) o no (False).
+        DiaFav_jueves (bool): Indica si el jueves es el día favorito del usuario (True) o no (False).
+        DiaFav_lunes (bool): Indica si el lunes es el día favorito del usuario (True) o no (False).
+        DiaFav_martes (bool): Indica si el martes es el día favorito del usuario (True) o no (False).
+        DiaFav_miercoles (bool): Indica si el miércoles es el día favorito del usuario (True) o no (False).
+        DiaFav_sabado (bool): Indica si el sábado es el día favorito del usuario (True) o no (False).
+        DiaFav_viernes (bool): Indica si el viernes es el día favorito del usuario (True) o no (False).
+        EstFav_invierno (bool): Indica si el invierno es la estación favorita del usuario (True) o no (False).
+        EstFav_otono (bool): Indica si el otoño es la estación favorita del usuario (True) o no (False).
+        EstFav_primavera (bool): Indica si la primavera es la estación favorita del usuario (True) o no (False).
+        EstFav_verano (bool): Indica si el verano es la estación favorita del usuario (True) o no (False).
+    
+    Métodos:
+        field_validator: Valida los valores de ciertas características, como la edad, el ratio y las variables no negativas.
+    """
+
     Edad: int
     Sexo_Mujer: bool
     UsoServiciosExtra: bool
@@ -186,15 +287,41 @@ class UserData(BaseModel):
     EstFav_primavera: bool
     EstFav_verano: bool
 
-        # Usando field_validator para Pydantic V2
+    # Usando field_validator para Pydantic V2
     @field_validator('Edad')
     def edad_mayor_18(cls, value):
+        """
+        Valida que la edad del usuario sea mayor o igual a 18.
+        
+        Parámetros:
+            value (int): Edad de la persona.
+        
+        Retorna:
+            int: Edad del usuario, si es válida.
+        
+        Lanza:
+            ValueError: Si la edad es menor a 18.
+        """
+
         if value < 18:
             raise ValueError('Edad debe ser mayor o igual a 18')
         return value
     
     @field_validator('ratio_cantidad_2025_2024')
     def ratio_no_negativo(cls, value):
+        """
+        Valida que el valor del ratio no sea negativo.
+        
+        Parámetros:
+            value (float): Valor del ratio.
+        
+        Retorna:
+            float: El valor del ratio, si es válido.
+        
+        Lanza:
+            ValueError: Si el ratio es negativo.
+        """
+
         if value < 0:
             raise ValueError('El ratio no puede ser negativo')
         return value
@@ -202,29 +329,81 @@ class UserData(BaseModel):
     @field_validator('Diversidad_servicios_extra', 'TotalVisitas', 'DiasActivo', 'VisitasUlt90',
                       'VisitasUlt180', 'VisitasPrimerTrimestre', 'VisitasUltimoTrimestre')
     def valores_no_negativos(cls, value, field):
+        """
+        Valida que las características relacionadas con visitas y actividad no sean negativas.
+        
+        Parámetros:
+            value (int): Valor de la característica.
+            field (str): Nombre de la característica a validar.
+        
+        Retorna:
+            int: El valor de la característica, si es válido.
+        
+        Lanza:
+            ValueError: Si el valor es negativo.
+        """
         if value < 0:
             raise ValueError(f"{field.name} no puede ser negativo")
         return value
 
 class MultiUserData(BaseModel):
+    """
+    Clase que permite manejar múltiples usuarios para la predicción.
+    
+    Atributos:
+        datos (List[UserData]): Lista de datos de múltiples usuarios.
+    """
     datos: List[UserData]
 
 
 class IDRequest(BaseModel):
+    """
+    Clase para validar la solicitud con un solo ID de persona.
+    
+    Atributos:
+        IdPersona (int): El ID de la persona.
+    """
+
     IdPersona: int
 
 
 class IDListRequest(BaseModel):
+    """
+    Clase para validar la solicitud con una lista de IDs de personas.
+    
+    Atributos:
+        Ids (List[int]): Lista de IDs de personas.
+    """
+
     Ids: List[int]
 
 
 @app.get("/", summary='Mensaje de bienvenida')
 def index():
+    """
+    Endpoint de bienvenida que devuelve un mensaje de introducción a la API.
+    
+    Retorna:
+        dict: Mensaje de bienvenida.
+    """
+
     return {"mensaje": "API de predicción de abandono con modelo entrenado en MLflow"}
 
 
 @app.post("/predecir_abandono/", summary="Predicción por datos completos (uno o varios)")
 def predecir_abandono(data: Union[UserData, MultiUserData]):
+    """
+    Endpoint para realizar una predicción de abandono para uno o varios usuarios, utilizando los datos de entrada proporcionados.
+    
+    Parámetros:
+        data (Union[UserData, MultiUserData]): Datos de usuario (uno o varios).
+    
+    Retorna:
+        dict: Resultado de la predicción, incluyendo probabilidad, nivel de riesgo y características importantes.
+    
+    Lanza:
+        HTTPException: Si las columnas no coinciden con las esperadas.
+    """
     if isinstance(data, UserData):
         df = pd.DataFrame([data.dict()])
     else:
@@ -246,28 +425,55 @@ def predecir_abandono(data: Union[UserData, MultiUserData]):
     prediccion = modelo.predict(X_scaled)[0]
     probabilidad = modelo.predict_proba(X_scaled)[0][1]  # Probabilidad de clase 1 (abandono)
 
-        # Categorizar el nivel de riesgo
+    # Categorizar el nivel de riesgo
     niveles = pd.cut(
-        probabilidad,
-        bins=[0, 0.2, 0.4, 0.6, 0.8, 1],
-        labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],
-        include_lowest=True
-    )
+        probabilidad, bins=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],
+        include_lowest=True)
+    
     # Obtener la importancia de las características por persona
     importancia_por_persona_df = obtener_importancia_por_persona(modelo, X_scaled, df.columns)
+    
+    # Guardar los resultados de la predicción en CSV
+    guardar_predicciones_api(
+        idpersona=data.IdPersona,  # Asegúrate de que estás pasando el ID correcto
+        variables=data.dict(),  # O las variables que corresponda
+        pred=prediccion,
+        prob=probabilidad,
+        nivel=niveles[0],
+        endpoint="/predecir_abandono",
+        run_id=mejor_info['run_id'],  # O el run_id correspondiente
+        importancia_variables= importancia_por_persona_df,
+        )
+
     # Crear los resultados
     resultados = [{
-        
         "ProbabilidadAbandono": round(probabilidad, 3),
         "NivelRiesgo": niveles,
         "CaracterísticasImportantes": importancia_por_persona_df.to_dict(orient="records")  # Devolvemos los resultados de las importancias
-        
     }]
     
     return resultados[0] if isinstance(data, UserData) else resultados
 
 @app.post("/predecir_abandono_por_id/", summary='Predicción por IdPersona')
 def predecir_abandono_por_id(request: IDRequest):
+    """
+    Endpoint para realizar una predicción de abandono para una persona específica, identificada por su ID.
+    
+    Parámetros:
+        request (IDRequest): Contiene el ID de la persona para la cual se desea hacer la predicción.
+            - IdPersona (int): El ID de la persona cuyo abandono se quiere predecir.
+
+    Retorna:
+        dict: Resultado de la predicción, incluyendo:
+            - IdPersona (int): El ID de la persona.
+            - ProbabilidadAbandono (float): Probabilidad de abandono (entre 0 y 1).
+            - NivelRiesgo (str): Nivel de riesgo categorizado ("Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto").
+            - CaracterísticasImportantes (list): Lista de características importantes con su respectiva importancia.
+    
+    Lanza:
+        HTTPException: Si no se encuentra la persona por ID en el dataset de validación o si hay un error de validación de columnas.
+    """
+
     id_buscar = request.IdPersona
     fila = df_validation[df_validation['IdPersona'] == id_buscar]
     
@@ -297,6 +503,19 @@ def predecir_abandono_por_id(request: IDRequest):
                    include_lowest=True)[0]
 
     importancia_por_persona_df = obtener_importancia_por_persona(modelo, X_scaled, df.columns)
+
+    # Guardar los resultados en CSV
+    guardar_predicciones_api(
+        idpersona=id_buscar,
+        variables=fila.to_dict(orient="records")[0],  # Las variables del ID
+        pred=prediccion,
+        prob=probabilidad,
+        nivel=nivel,
+        endpoint="/predecir_abandono_por_id",
+        run_id=mejor_info['run_id'],  # O el run_id correspondiente
+        importancia_variables= importancia_por_persona_df,
+      
+    )
     return {
         "IdPersona": int(id_buscar),
         "ProbabilidadAbandono": round(probabilidad, 3),
@@ -306,6 +525,25 @@ def predecir_abandono_por_id(request: IDRequest):
 
 @app.post("/predecir_abandono_por_ids/", summary='Predicción por lista de IdPersona')
 def predecir_abandono_por_ids(request: IDListRequest):
+    """
+    Endpoint para realizar predicciones de abandono para una lista de personas, identificadas por sus IDs.
+    
+    Parámetros:
+        request (IDListRequest): Contiene una lista de IDs de las personas para las cuales se desea hacer la predicción.
+            - Ids (List[int]): Lista de IDs de las personas cuyos abandonos se quieren predecir.
+
+    Retorna:
+        list: Una lista de diccionarios, donde cada diccionario contiene:
+            - IdPersona (int): El ID de la persona.
+            - ProbabilidadAbandono (float): Probabilidad de abandono (entre 0 y 1).
+            - NivelRiesgo (str): Nivel de riesgo categorizado ("Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto").
+            - CaracterísticasImportantes (list): Lista de características importantes con su respectiva importancia.
+            - error (str, opcional): Si la persona no fue encontrada, se devuelve un mensaje de error.
+    
+    Lanza:
+        HTTPException: Si hay un error de validación de columnas o en el procesamiento de los datos.
+    """
+    
     resultados = []
 
     for idpersona in request.Ids:
@@ -340,6 +578,19 @@ def predecir_abandono_por_ids(request: IDListRequest):
                        include_lowest=True)[0]
         # Obtener las características más importantes
         importancia_por_persona_df = obtener_importancia_por_persona(modelo, X_scaled, df.columns)
+
+                # Guardar los resultados en CSV
+        guardar_predicciones_api(
+            idpersona=idpersona,
+            variables=fila.to_dict(orient="records")[0],  # Las variables del ID
+            pred=prediccion,
+            prob=probabilidad,
+            nivel=nivel,
+            endpoint="/predecir_abandono_por_ids",
+            run_id=mejor_info['run_id'],  # O el run_id correspondiente
+            importancia_variables= importancia_por_persona_df
+         
+        )
 
         resultados.append({
             "IdPersona": idpersona,

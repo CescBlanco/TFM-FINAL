@@ -9,27 +9,56 @@ from src.utils.artifacts import cargar_modelo_y_scaler
 from src.utils.metrics import calcular_metricas
 from sklearn.metrics import accuracy_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 
-def validar_modelo(experimento, archivo_validacion, metric="auc"):
+def validar_modelo(experimento: str, archivo_validacion: str, metric: str = "auc") -> tuple:
     """
-    Evalúa el mejor modelo de un experimento sobre un dataset de validación.
+        Evalúa el mejor modelo de un experimento sobre un dataset de validación y genera predicciones.
+
+        Parámetros:
+            experimento (str): Nombre del experimento en MLflow del cual se cargará el mejor modelo.
+            archivo_validacion (str): Nombre del archivo CSV con el conjunto de datos de validación.
+            metric (str, opcional): Métrica para seleccionar el mejor modelo (por defecto "auc").
+
+        Retorna:
+            tuple: Una tupla con:
+                - dict: Métricas de validación si la columna "Abandono" está presente en el dataset.
+                - pd.DataFrame: DataFrame con las predicciones si "Abandono" no está presente en el dataset.
+
+        Guardado:
+            Si la columna "Abandono" está presente, se imprime y retorna las métricas. Si no, se guardan las predicciones
+            en un archivo CSV con el nombre `predicciones_{experimento}.csv`.
+
+        Excepciones:
+            FileNotFoundError: Si el archivo de validación no se encuentra.
+            MlflowException: Si no se puede cargar el modelo desde MLflow.    
     """
     print(f"\n🧪 Validando experimento '{experimento}' usando {archivo_validacion}")
 
+    # Cargar el modelo y el scaler del experimento utilizando la función definida.
     model, scaler, run_id = cargar_modelo_y_scaler(experimento, metric)
+    
+    # Cargar el conjunto de datos de validación desde el archivo CSV
     df_valid = pd.read_csv(os.path.join(VALIDATION_OUTPUT_PATH, archivo_validacion))
 
-    X_valid = df_valid.drop(columns=["Abandono"], errors="ignore")
+    # Separar las características (X) y la variable objetivo (y)
+    X_valid = df_valid.drop(columns=["Abandono"], errors="ignore") # Eliminar 'Abandono' de las características
     y_valid = df_valid["Abandono"] if "Abandono" in df_valid.columns else None
 
+    # Escalar las características con el scaler cargado
     X_valid_scaled = scaler.transform(X_valid)
-    y_pred = model.predict(X_valid_scaled)
-    y_prob = model.predict_proba(X_valid_scaled)[:, 1]
 
+    # Realizar predicciones con el modelo cargado
+    y_pred = model.predict(X_valid_scaled)
+    y_prob = model.predict_proba(X_valid_scaled)[:, 1] # Probabilidad para la clase positiva
+
+    # Si 'Abandono' está presente, se calculan las métricas de evaluación
     if y_valid is not None:
         metrics = calcular_metricas(y_valid, y_pred, y_prob)
         print("\n📊 Métricas de validación:\n", metrics)
         return metrics, y_pred, y_prob
+    
     else:
+
+        # Si no está presente, se guardan las predicciones y probabilidades
         df_pred = df_valid.copy()
         df_pred["Prediccion"] = y_pred
         df_pred["Probabilidad"] = y_prob
@@ -39,41 +68,67 @@ def validar_modelo(experimento, archivo_validacion, metric="auc"):
         return df_pred
     
 
-def obtener_caracteristicas_importantes(modelo, columnas, X_val):
+def obtener_caracteristicas_importantes(modelo, columnas: list, X_val: pd.DataFrame) -> list:
     """
-    Obtiene las características más importantes de un modelo basado en árboles o lineal.
+    Obtiene las características más importantes de un modelo, ya sea basado en árboles o lineal.
+
+    Parámetros:
+        modelo (sklearn.model): El modelo entrenado del cual se extraerán las importancias.
+        columnas (list): Lista con los nombres de las características (columnas).
+        X_val (pd.DataFrame): DataFrame con las características para la validación (usado en modelos basados en SHAP).
+
+    Retorna:
+        list: Lista de tuplas con las características y sus importancias, ordenadas de mayor a menor importancia.
+
     """
 
     if hasattr(modelo, 'feature_importances_'):
+        
+        # Si el modelo tiene la propiedad 'feature_importances_', como un Random Forest, se utiliza
         importances = modelo.feature_importances_
+
     elif hasattr(modelo, 'coef_'):
+
+        # Si el modelo tiene la propiedad 'feature_importances_', como un Random Forest, se utiliza
         importances = abs(modelo.coef_[0])
     else:
-        # Si no hay feature_importances_ o coef_, usamos SHAP
+        # Si el modelo no tiene 'feature_importances_' ni 'coef_', se usan SHAP para obtener las importancias
         explainer = shap.TreeExplainer(modelo)
         shap_values = explainer.shap_values(X_val)  # Aquí asumimos que tienes X_val
         importances = shap_values[0].mean(axis=0)  # Promedio de la importancia para cada característica
     
-    # Empareja las importancias con las columnas y ordénalas
+    # Empareja las importancias con las columnas y ordénalas de mayor a menor importancia
     return sorted(zip(columnas, importances), key=lambda x: x[1], reverse=True)
 
 
-def evaluar_validacion_externa(experiment_name, features):
-    """
-    Valida el modelo de un experimento MLflow usando un dataset externo y registra resultados.
-    Genera:
-    - Predicciones por persona.
-    - Importancias por persona.
-    - Importancias globales del modelo.
-    """
+def evaluar_validacion_externa(experiment_name: str, features: list) -> None:
 
+    """
+    Evalúa el modelo del experimento MLflow sobre un conjunto de datos externo, registra los resultados y genera artefactos.
+
+    Parámetros:
+        experiment_name (str): Nombre del experimento en MLflow para buscar y cargar el modelo.
+        features (list): Lista de las columnas a usar como características para la validación.
+
+    Guardado:
+        - Genera y guarda las predicciones, las importancias globales y las importancias por persona en archivos CSV.
+        - Registra las métricas de validación externa (accuracy, recall, f1, auc) y las importancias en MLflow.
+
+    Excepciones:
+        Exception: Si el experimento no se encuentra en MLflow o no se puede cargar el scaler.
+        MlflowException: Si se produce un error al registrar el modelo o artefactos.
+   
+    """
+    # Cargar el conjunto de validación
     val_path = f"{VALIDATION_OUTPUT_PATH}/df_validacion_{experiment_name}.csv"
     df_val = pd.read_csv(val_path)
 
+    # Separar las características y la variable objetivo
     X_val = df_val[features]
     y_val = df_val['Abandono']
     ids_persona = df_val['IdPersona']  
 
+    # Conectar con el cliente de MLflow para obtener el mejor modelo
     client = mlflow.tracking.MlflowClient()
     experiment = client.get_experiment_by_name(experiment_name)
 
@@ -87,7 +142,7 @@ def evaluar_validacion_externa(experiment_name, features):
     )[0]
     run_id = best_run.info.run_id
 
-    # Cargar modelo
+    # Cargar el modelo y el scaler
     model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
 
     # Listar artefactos para encontrar el scaler
@@ -105,12 +160,12 @@ def evaluar_validacion_externa(experiment_name, features):
     scaler_path = client.download_artifacts(run_id, scaler_artifact_name, "./tmp_artifacts")
     scaler = joblib.load(scaler_path)
 
-    # Transformar los datos
+    # Transformar los datos con el scaler y realizar predicciones
     X_scaled = scaler.transform(X_val)
     y_pred = model.predict(X_scaled)
     y_prob = model.predict_proba(X_scaled)[:, 1]
 
-    # --- Métricas ---  
+    # Calcular métricas de validación
     acc = accuracy_score(y_val, y_pred)
     rec = recall_score(y_val, y_pred)
     f1 = f1_score(y_val, y_pred)
@@ -123,7 +178,7 @@ def evaluar_validacion_externa(experiment_name, features):
     global_importances_path = f"tmp_artifacts/importancias_global_{experiment_name}.csv"
     df_importances_global.to_csv(global_importances_path, index=False)
     
-    # Importancias por persona
+    # Guardar las importancias por persona
     feature_importances = model.feature_importances_ if hasattr(model, "feature_importances_") else model.coef_.flatten()
     importances_df = pd.DataFrame(X_scaled, columns=features)
     for i, f in enumerate(features):
@@ -132,20 +187,22 @@ def evaluar_validacion_externa(experiment_name, features):
     person_importances_path = f"tmp_artifacts/importancias_persona_{experiment_name}.csv"
     importances_df.to_csv(person_importances_path, index=False)
 
-    # Predicciones
+    # Guardar las predicciones
     pred_df = pd.DataFrame({
         "IdPersona": ids_persona,
         "y_true": y_val,
         "y_pred": y_pred,
         "y_prob": y_prob
     })
+
+    #Añadir variable de riesgo según la probabilidad calculada.
     pred_df['nivel_riesgo'] = pd.cut(pred_df['y_prob'], bins=[0,0.2,0.4,0.6,0.8,1],
                     labels=["Muy bajo", "Bajo", "Medio", "Alto", "Muy alto"])
 
     preds_path = f"tmp_artifacts/preds_{experiment_name}.csv"
     pred_df.to_csv(preds_path, index=False)
 
-    # 🔐 Registrar modelo en el Model Registry
+    # Registrar el modelo y los artefactos en MLflow
     MODEL_NAME = experiment_name  # Ej: "modelo3"
     try:
         result = mlflow.register_model( model_uri=f"runs:/{run_id}/model", name=MODEL_NAME )
@@ -166,7 +223,7 @@ def evaluar_validacion_externa(experiment_name, features):
 
     #print(f"✅ Modelo '{MODEL_NAME}' versión {model_version} registrado y movido a Production")
 
-    # Logging de validación externa como nuevo run
+    # Registrar la validación externa como un nuevo run
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=f"validacion_externa_{experiment_name}"):
         mlflow.set_tags({"type": "validacion_externa", "validated_model": run_id })
         mlflow.log_param("modelo_validado", run_id)
@@ -183,15 +240,12 @@ def evaluar_validacion_externa(experiment_name, features):
         mlflow.log_artifact(person_importances_path)
 
 
-        # Limpiar tmp
+        # Limpiar los archivos temporales generados
         for f in [preds_path, global_importances_path, person_importances_path]:
             if os.path.exists(f):
                 os.remove(f)
 
-
-        
-
-        # Print resumen
+        # Imprimir resumen de la validación
         print(f"\n🔎 Resultados validación externa ({experiment_name}):")
         print(f"Accuracy: {acc:.3f} | Recall: {rec:.3f} | F1: {f1:.3f} | AUC: {auc_val:.3f}")
         print("Confusion Matrix:\n", cm)
