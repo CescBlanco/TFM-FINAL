@@ -561,3 +561,187 @@ ESTRATEGIAS_FIDELIZACION = {
         """]
 }
 
+def mostrar_estrategias(nivel_riesgo):
+    estrategias = {
+        "Muy Bajo": """
+            1. **`Programa de recompensas por uso continuo`**: Implementar un sistema de puntos para los usuarios frecuentes, que puedan canjear por descuentos, contenido exclusivo o productos premium.
+            2. **`Acceso anticipado a nuevas funcionalidades`**: Los usuarios más activos y pagos pueden ser invitados a probar nuevas funciones antes que el resto de los usuarios. Esto crea un sentido de exclusividad.
+            3. **`Beneficios por referencia`**: Ofrecer recompensas por recomendar la plataforma a amigos o colegas. Esto podría ser un mes gratis o un descuento para ambos (referente y referido).
+            4. **`Ofertas personalizadas para el perfil de uso`**: Ofrecer descuentos o beneficios exclusivos basados en el comportamiento de uso del cliente. Ejemplo: si un usuario siempre usa una funcionalidad específica, enviarle ofertas relacionadas con esa funcionalidad.
+            5. **`Eventos exclusivos en línea`**: Organizar eventos exclusivos como webinars o reuniones virtuales con expertos, donde solo los usuarios activos o pagos puedan participar.
+        """,
+
+        "Bajo": """
+            1. **`Descuentos en renovación de suscripción`**: Ofrecer descuentos significativos si renuevan su suscripción o realizan pagos adicionales dentro de un corto periodo de tiempo
+            2. **`Campañas de retargeting personalizado`**: Utilizar datos de comportamiento para ofrecerles promociones o contenidos personalizados que los inviten a retomar la actividad en la plataforma.
+            3. **`Notificaciones personalizadas con ofertas de valor`**: Enviar recordatorios de productos o funciones que han utilizado previamente, junto con ofertas especiales (ejemplo: "Vuelve y consigue 10% de descuento en tu próxima compra").
+            4. **`Descuentos por uso frecuente`**: Ofrecer descuentos o recompensas para aquellos usuarios que incrementen su actividad durante el mes (por ejemplo, si usan la plataforma 10 días consecutivos, obtienen un descuento del 15%).
+            5. **`Recompensas por interacción con nuevas funciones`**: Incentivar a los usuarios a explorar nuevas características de la plataforma ofreciendo un beneficio como un mes adicional de suscripción o puntos de recompensa.
+
+        """,
+        "Medio": """
+            1. **`Ofertas de reactivación personalizadas`**: Enviar un correo o notificación push ofreciendo un descuento importante o acceso a contenido exclusivo si regresan a la plataforma dentro de un plazo determinado.
+            2. **`Recordatorio de funcionalidades no utilizadas`**: Utilizar los datos de comportamiento para enviar mensajes recordando las funcionalidades que no han sido exploradas por el usuario, ofreciendo tutoriales o guías rápidas.
+            3. **`Campañas de contenido exclusivo para inactivos`**: Crear un catálogo de contenido exclusivo (tutoriales, seminarios web, o artículos premium) disponible solo para aquellos usuarios que regresen después de un periodo de inactividad.
+            4. **`Ofrecer acceso a nuevas funcionalidades por tiempo limitado`**: Probar nuevas características de la plataforma de forma gratuita por un tiempo limitado a usuarios que han estado inactivos durante cierto periodo.
+            5. **`Notificaciones de "última oportunidad"`**: Enviar un correo con un asunto como “Última oportunidad para obtener tus beneficios exclusivos”, creando un sentido de urgencia.
+        """,
+        "Alto": """
+            1. **`Descuentos en el primer pago`**: Ofrecer descuentos agresivos o promociones de "primer pago gratis" si el usuario completa la conversión de gratuito a pago (por ejemplo, "Obtén un mes gratis si te suscribes ahora").
+            2. **`Llamadas de atención personalizadas`**: Contactar directamente con estos usuarios a través de soporte al cliente o ventas para entender las razones de su baja actividad y ofrecer una solución personalizada (por ejemplo, “¿Te gustaría una sesión de asesoramiento para mejorar tu experiencia?”).
+            3. **`Oferta de planes flexibles o a medida`**: Crear opciones de pago más flexibles o planes personalizados según el uso que hacen los usuarios. Ofrecer un “plan básico” para que comiencen a pagar a bajo costo.
+            4. **`Campañas de reactivación urgente`**: Ofrecer grandes descuentos (como un 70% de descuento por tres meses) o beneficios adicionales si reactivan su cuenta dentro de las próximas 24 horas.
+            5. **`Ofrecer sesiones de soporte o consultoría gratuita`**: Ofrecer sesiones gratuitas con un experto para guiar a los usuarios sobre cómo sacar el máximo provecho de la plataforma.
+        """,
+        "Muy Alto": """
+            1. **`Campañas de recuperación con descuentos masivos`**: Ofrecer un descuento profundo como "90% de descuento en el primer mes si te suscribes ahora", para atraerlos a volver, aunque solo sea para probar la plataforma nuevamente.
+            2. **`Encuestas de salida con incentivos`**: Enviar encuestas de salida con una recompensa por completarlas (por ejemplo, “dinos por qué te vas y recibe un 50% de descuento en tu próxima compra”).
+            3. **`Planes gratuitos por tiempo limitado`**: Ofrecer un acceso completo y gratuito por 1 mes a todos los servicios premium, con la intención de engancharlos nuevamente a la plataforma.
+            4. **`Comunicación directa de recuperación (SMS o Llamada)`**: Si es posible, contactar directamente con el usuario por teléfono o SMS para entender por qué no se están comprometiendo y ofrecer una oferta personalizada.
+            5. **`Experiencia de onboarding personalizada`**: Crear una experiencia de reactivación guiada, con contenido paso a paso para que el usuario vuelva a usar la plataforma, mostrando cómo resolver sus puntos de dolor de manera efectiva.
+        """
+    }
+
+    if nivel_riesgo in estrategias:
+        with st.expander(f"Estrategias de fidelización para **{nivel_riesgo}**"):
+            st.markdown(estrategias[nivel_riesgo])
+
+
+def color_con_riesgo(probabilidad):
+        # Determinar nivel de riesgo
+        if probabilidad <= 0.2:
+            nivel = "Muy Bajo"
+        elif probabilidad <= 0.4:
+            nivel = "Bajo"
+        elif probabilidad <= 0.6:
+            nivel = "Medio"
+        elif probabilidad <= 0.8:
+            nivel = "Alto"
+        else:
+            nivel = "Muy Alto"
+
+        colores_riesgo = {
+            "Muy Bajo": "#2ca02c",
+            "Bajo": "#98df8a",
+            "Medio": "#ffcc00",
+            "Alto": "#ff7f0e",
+            "Muy Alto": "#d62728"
+        }
+        color = colores_riesgo[nivel]
+        return color, nivel
+
+def preparar_df_importancias(response):
+    """
+    Esta función recibe un diccionario `response` que contiene la clave 
+    'CaracterísticasImportantes'. Extrae las variables más importantes, las ordena por valor absoluto 
+    y devuelve el top 10 de las variables con mayor importancia.
+
+    Parameters:
+    - response (dict): Diccionario con las características y sus importancias.
+    
+    Returns:
+    - DataFrame con el top 10 de las variables más importantes.
+    """
+    
+    # Verificar si la clave 'CaracterísticasImportantes' existe en la respuesta
+    if "CaracterísticasImportantes" not in response:
+        raise ValueError("La clave 'CaracterísticasImportantes' no se encuentra en la respuesta.")
+
+    # Convertir a DataFrame
+    df_importancias = pd.DataFrame(response["CaracterísticasImportantes"])
+
+    # Filtrar columnas que contienen '_importance' en su nombre
+    df_importance = df_importancias[[col for col in df_importancias.columns if "_importance" in col]]
+    
+    # Renombrar columnas para eliminar '_importance' del nombre
+    df_importance.columns = [col.replace("_importance", "") for col in df_importance.columns]
+
+    # Transponer el DataFrame y renombrar las columnas
+    df_top = df_importance.T.reset_index()
+    df_top.columns = ["Variable", "Valor"]
+    
+    # Ordenar el DataFrame por el valor en la columna 'Valor'
+    df_top = df_top.sort_values(by="Valor", ascending=False)
+
+    # Top 10 por valor absoluto
+    df_top_filtered = df_top.reindex(df_top["Valor"].abs().sort_values(ascending=False).index).head(10)
+
+    return df_top_filtered
+
+def plot_abonado_importancias(df):
+    # Gráfico
+    colors = ['red' if v > 0 else 'green' for v in df["Valor"]]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.barh(df["Variable"], df["Valor"], color=colors)
+    ax.axvline(x=0, color='white', linestyle='--', linewidth=1)
+    ax.set_xlabel("Impacto en riesgo", color='white')
+    ax.set_title("Variables más influyentes para este abonado", color='white')
+    fig.patch.set_facecolor('none')
+    ax.set_facecolor('none')
+    plt.tight_layout()
+    plt.yticks(rotation=0, color='white')
+    ax.tick_params(axis='x', colors='white')
+
+    for i, v in enumerate(df["Valor"]):
+        ha = 'left' if v > 0 else 'right'
+        xpos = v + (0.0005 if v > 0 else 0.02)
+        ax.text(
+            xpos, i, f"{v:.2f}", color='black', va='center', ha=ha,
+            bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2')
+        )
+    return fig
+
+def generar_frase_resumen(df_top_filtered, nivel_riesgo):
+    # Separar variables por signo
+    positivas = df_top_filtered[df_top_filtered["Valor"] > 0].sort_values(by="Valor", ascending=False).head(3)  # Las 3 que aumentan el riesgo
+    negativas = df_top_filtered[df_top_filtered["Valor"] <= 0].sort_values(by="Valor", ascending=True).head(3)  # Las 3 que disminuyen el riesgo
+    
+    # Función para generar lista de variables
+    def listar_variables(variables):
+        if len(variables) == 0:
+            return "ninguna"
+        elif len(variables) == 1:
+            return variables[0]
+        elif len(variables) == 2:
+            return f"{variables[0]} y {variables[1]}"
+        else:
+            return ", ".join(variables[:-1]) + f" y {variables[-1]}"
+    
+    # Obtener listas de variables
+    positivas_variables = listar_variables(positivas["Variable"].tolist())
+    negativas_variables = listar_variables(negativas["Variable"].tolist())
+    
+    # Ajustar frase según las variables disponibles
+    if positivas_variables == "ninguna" and negativas_variables == "ninguna":
+        frase_resumen = f"No se identificaron variables que aumenten ni que disminuyan el riesgo de abandono. El riesgo global es {nivel_riesgo}."
+    elif positivas_variables == "ninguna":
+        frase_resumen = f"El riesgo de abandono de este abonado es reducido principalmente por {negativas_variables}, resultando en un riesgo global {nivel_riesgo}."
+    elif negativas_variables == "ninguna":
+        frase_resumen = f"El riesgo de abandono de este abonado aumenta principalmente por {positivas_variables}, resultando en un riesgo global {nivel_riesgo}."
+    else:
+        frase_resumen = f"El riesgo de abandono de este abonado aumenta principalmente por {positivas_variables}, mientras que {negativas_variables} ayudan a reducirlo, resultando en un riesgo global {nivel_riesgo}."
+    
+    return frase_resumen
+
+# --- 3. Explicación del modelo ---
+def generar_explicacion_contexto(df):
+    # Separar variables por signo
+    positivas = df[df["Valor"] > 0]
+    negativas = df[df["Valor"] <= 0]
+
+    # Crear dos columnas
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 🔺 Aumentan el riesgo")
+        for _, row in positivas.iterrows():
+            var = row["Variable"]
+            imp = round(row["Valor"], 3)
+            st.markdown(f"**{var}**: {imp}")
+
+    with col2:
+        st.markdown("### 🔻 Disminuyen el riesgo")
+        for _, row in negativas.iterrows():
+            var = row["Variable"]
+            imp = round(row["Valor"], 3)
+            st.markdown(f"**{var}**: {imp}")

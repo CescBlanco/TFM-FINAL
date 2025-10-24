@@ -25,12 +25,6 @@ st.set_page_config(page_title="App de Predicción de Abandono", layout="wide")
 # Usar markdown para centrar el título
 st.markdown("<h1 style='text-align: center; color: #66BB6A;'>Predicción de Abandono: CEM Horta Esportiva</h1>", unsafe_allow_html=True)
 
-
-
-# Mostrar un breve saludo
-#st.subheader("Bienvenido a la herramienta de predicción de abandono de abonados")
-
-
 # Tabs para las diferentes opciones
 tabs = st.tabs([":bar_chart: Datos inventados", ":id: Un abonado", ":memo: Múltiples abonados", ":mag: Valoración modelos"])
 
@@ -42,14 +36,22 @@ with tabs[0]:
 
     st.write("Por favor, ingresa los datos del abonado para realizar la predicción.")
     userdata = input_userdata()  # Suponiendo que esta función obtiene los datos del usuario
-    # Estilo con borde y sombra
+    
     # Sección de predicción: claramente diferenciada
     st.write('----')
     st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
 
     if st.button("🚀 Iniciar Predicción para un abonado inventado", key="btn_individual"):
-        st.write("Calculando la predicción del abandono... ")
+         # Crear un contenedor vacío para el mensaje de "Calculando..."
+        calculating_message = st.empty()
+        # Mostrar el mensaje de "Calculando..."
+        calculating_message.write("Calculando las predicciones de abandono... ")
+         # Esperamos un segundo antes de borrar el mensaje
+        time.sleep(2)
+        # Ahora, también borramos el mensaje de "Calculando..."
+        calculating_message.empty()
+        
 
         resultados = []
         # Convertir los valores booleanos a True/False, sin cambiar a 1/0
@@ -64,56 +66,83 @@ with tabs[0]:
         else:
                 # Realizar la predicción
             response = obtener_predicciones_api("predecir_abandono_socio_simulado/", userdata)
-            st.success("✅ Predicción obtenida")
-            st.balloons()  
+             # Usamos st.empty() para crear un contenedor vacío
+            success_message = st.empty()
+
+            # Mostrar el mensaje de éxito
+            success_message.success("✅ Predicción obtenida")
+
+            # Esperamos un segundo antes de borrar el mensaje
+            time.sleep(1)
+
+            # Borramos el mensaje de éxito
+            success_message.empty()
+                        
             if isinstance(response, dict):  # Verifica que la respuesta es un diccionario
                 res = response
                 res['IdPersona'] = res.get('IdPersona', 'Simulado')  # Asignar un id simulado si no existe
-                resultados.append(res)
+                probabilidad = res.get("ProbabilidadAbandono", 0)
+                nivel_riesgo = res.get("NivelRiesgo", "Desconocido")
+                
+
+                # Verifica que los datos no sean None o vacíos
+                if probabilidad is not None and nivel_riesgo:
+                    color, nivel = color_con_riesgo(probabilidad)
+                    st.markdown(
+                        f"""
+                        <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
+                            Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel_riesgo})
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.warning("❌ No se encontró información sobre la probabilidad de abandono.")
+                st.markdown(" ")
+                st.markdown("### Lo que impacta en la probabilidad del abonado:")
+                st.markdown(" ")
+
+                # --- 2. Variables más importantes ---
+                if "CaracterísticasImportantes" in response:
+                    
+                    df_top_filtered = preparar_df_importancias(response)
+                    
+                    
+                    fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
+                    st.pyplot(fig_importancias_abonado)
+                
+                    frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
+            
+                    # Mostrarla en Streamlit
+                    st.markdown(f"**Resumen del riesgo**: {frase_resumen}")
+
+                    
+                    # --- 3. Explicación del modelo ---
+                    st.markdown("")
+
+                    st.markdown("### Comportamiento del riesgo: ")
+
+                    generar_explicacion_contexto(df_top_filtered)
+
+                st.subheader(" ")
+                st.subheader("Acción de fidelización: ")
+                
+                # --- 4. Estrategias de fidelización ---
+                id_persona = response.get("IdPersona")
+                nivel_riesgo = response.get("NivelRiesgo")
+                if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
+                    with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
+                        for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
+                            st.markdown(estrategia)
+                    st.balloons()
+                else:
+                    st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")   
+  
+
             else:
                 st.warning(f"❌ Error en la predicción para IdPersona simulado")
 
-        # Mostrar los resultados en formato tabla
-            df_resultados = pd.DataFrame(resultados)
-            if not df_resultados.empty:
-                st.write("Resultados de predicción:")
-                df_resultados = df_resultados.rename(columns={
-                    'ProbabilidadAbandono': 'Probabilidad de Abandono',
-                    'NivelRiesgo': 'Nivel de Riesgo'
-                })
-
-                st.dataframe(df_resultados)
-             # Verificar si la respuesta es una cadena JSON y convertirla a un diccionario si es necesario
-                try:
-                    if isinstance(response, str):  # Si es una cadena
-                        response = json.loads(response)  # Convertir de JSON a diccionario
-                    
-                    
-                
-                except json.JSONDecodeError as e:
-                    st.error(f"Error al parsear la respuesta JSON: {e}")
-                    
-
-                # Ahora podemos procesar la respuesta
-                if isinstance(response, dict):  # Si la respuesta es un diccionario
-                    id_persona = response.get("IdPersona")
-                    nivel_riesgo = response.get("NivelRiesgo")
-                    
-                    st.write(f"Nivel de Riesgo para ID {id_persona}: {nivel_riesgo}")
-
-                    # Mostrar las estrategias de fidelización correspondientes al nivel de riesgo
-                    if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
-                        with st.expander(f"Estrategias de fidelización para el ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
-                            for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
-                                st.markdown(estrategia)
-                        st.balloons()  
-                    else:
-                        st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
-                else:
-                    st.error("La respuesta no es un diccionario válido.")
-            else:
-                st.error("⚠️ No se obtuvo respuesta de la API.")
-                
+                 # Verificar si la respuesta es una cadena JSON y convertirla a un diccionario si es necesario         
 
 # ------------------- #
 # TAB 1: Un ID
@@ -127,46 +156,96 @@ with tabs[1]:
     st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.") 
     import json
-
-
+    
     if st.button("🚀 Iniciar Predicción por un abonado", key="btn_id"):
-        st.write("Calculando la predicción del abandono... ")
+        # Crear un contenedor vacío para el mensaje de "Calculando..."
+        calculating_message = st.empty()
+        # Mostrar el mensaje de "Calculando..."
+        calculating_message.write("Calculando las predicciones de abandono... ")
+         # Esperamos un segundo antes de borrar el mensaje
+        time.sleep(2)
+        # Ahora, también borramos el mensaje de "Calculando..."
+        calculating_message.empty()
+
         data = {"IdPersona": id_persona}
         response = obtener_predicciones_api("predecir_abandono_por_id/", data)
 
-        if response:
-            st.success("✅ Predicción obtenida")
-           
-            st.json(response)  # Mostrar la respuesta para verificar su contenido
+        if not response:
+            st.error("⚠️ No se obtuvo respuesta de la API.")
+        else:
+             # Usamos st.empty() para crear un contenedor vacío
+            success_message = st.empty()
 
-            # Verificar si la respuesta es una cadena JSON y convertirla a un diccionario si es necesario
+            # Mostrar el mensaje de éxito
+            success_message.success("✅ Predicción obtenida")
+
+            # Esperamos un segundo antes de borrar el mensaje
+            time.sleep(1)
+
+            # Borramos el mensaje de éxito
+            success_message.empty()
+    
+
+            # Parsear JSON si es cadena
             try:
-                if isinstance(response, str):  # Si es una cadena
-                    response = json.loads(response)  # Convertir de JSON a diccionario
-                              
+                if isinstance(response, str):
+                    response = json.loads(response)
             except json.JSONDecodeError as e:
                 st.error(f"Error al parsear la respuesta JSON: {e}")
-                
+                response = None
 
-            # Ahora podemos procesar la respuesta
-            if isinstance(response, dict):  # Si la respuesta es un diccionario
+            if response:
+                # --- 1. Probabilidad de abandono ---
+                probabilidad = response.get("ProbabilidadAbandono", 0)              
+
+                color, nivel= color_con_riesgo(probabilidad)
+                st.markdown(
+                    f"""
+                    <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
+                        Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel})
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                st.markdown(" ")
+                st.markdown("### Lo que impacta en la probabilidad del abonado:")
+                st.markdown(" ")
+                
+                # --- 2. Variables más importantes ---
+                if "CaracterísticasImportantes" in response:
+                    
+                    df_top_filtered = preparar_df_importancias(response)
+                    
+                    
+                    fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
+                    st.pyplot(fig_importancias_abonado)
+                 
+                    frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
+            
+                    # Mostrarla en Streamlit
+                    st.markdown(f"**Resumen del riesgo**: {frase_resumen}")                  
+ 
+                    st.markdown("")
+      
+                    st.markdown("### Comportamiento del riesgo: ")
+
+                    generar_explicacion_contexto(df_top_filtered)
+
+                st.subheader(" ")
+                st.subheader("Acción de fidelización: ")
+                
+                # --- 4. Estrategias de fidelización ---
                 id_persona = response.get("IdPersona")
                 nivel_riesgo = response.get("NivelRiesgo")
-                
-                st.write(f"Nivel de Riesgo para ID {id_persona}: {nivel_riesgo}")
-
-                # Mostrar las estrategias de fidelización correspondientes al nivel de riesgo
                 if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
                     with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
                         for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
                             st.markdown(estrategia)
-                    st.balloons()  
+                    st.balloons()
                 else:
                     st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
-            else:
-                st.error("La respuesta no es un diccionario válido.")
-        else:
-            st.error("⚠️ No se obtuvo respuesta de la API.")
+
+
 
 # ------------------- #
 # TAB 2: Múltiples IDs
@@ -180,55 +259,93 @@ with tabs[2]:
 
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
 
-    
-
     if st.button("🚀 Iniciar Predicción por múltiples abonados", key="btn_ids"):
-        st.write("Calculando la predicción del abandono... ")
+        # Crear un contenedor vacío para el mensaje de "Calculando..."
+        calculating_message = st.empty()
+        # Mostrar el mensaje de "Calculando..."
+        calculating_message.write("Calculando las predicciones de abandono... ")
+         # Esperamos un segundo antes de borrar el mensaje
+        time.sleep(2)
+        # Ahora, también borramos el mensaje de "Calculando..."
+        calculating_message.empty()
+
         try:
+            # Obtener los IDs desde el input (como una lista)
             ids_list = [int(id_.strip()) for id_ in ids_input.split(",") if id_.strip()]
             data = {"Ids": ids_list}
+            
+            # Obtener la respuesta de la API
             response = obtener_predicciones_api("predecir_abandono_por_ids/", data)
 
-            if response:
-                st.success("✅ Predicciones obtenidas")
-               
-                st.json(response)  # Mostrar la respuesta para su revisión
+            if not response:
+                st.error("⚠️ No se obtuvo respuesta de la API.")
+            else:
+                 # Usamos st.empty() para crear un contenedor vacío
+                success_message = st.empty()
 
-                # Verificar si la respuesta es una cadena JSON y convertirla a un diccionario si es necesario
+                # Mostrar el mensaje de éxito
+                success_message.success("✅ Predicción obtenida")
+
+                # Esperamos un segundo antes de borrar el mensaje
+                time.sleep(1)
+
+                # Borramos el mensaje de éxito
+                success_message.empty()
+
+                # Si la respuesta es una cadena JSON, convertirla
                 try:
                     if isinstance(response, str):  # Si la respuesta es una cadena
                         response = json.loads(response)  # Convertir de JSON a diccionario
-                        st.write("Respuesta convertida a diccionario:")  # Mostrar respuesta convertida
-                        st.json(response)
                 except json.JSONDecodeError as e:
                     st.error(f"Error al parsear la respuesta JSON: {e}")
 
-                # Procesar la respuesta para cada ID
+                # Procesar cada predicción en la respuesta si es una lista
                 if isinstance(response, list):  # Si la respuesta es una lista
                     for prediccion in response:
                         # Asegurarse de que la predicción tenga la estructura correcta
                         id_persona = prediccion.get("IdPersona")
                         nivel_riesgo = prediccion.get("NivelRiesgo")
-                        
-                        st.write(f"Nivel de Riesgo para ID {id_persona}: {nivel_riesgo}")
+                        st.write("---")
+                        st.write(f"### Predicción para el abonado con ID {id_persona}")
 
-                        # Mostrar las estrategias de fidelización correspondientes al nivel de riesgo
+                        # --- 1. Probabilidad de abandono ---
+                        probabilidad = prediccion.get("ProbabilidadAbandono", 0)
+                        color, nivel = color_con_riesgo(probabilidad)
+                        st.markdown(
+                            f"""
+                            <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
+                                Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel})
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        
+                        # --- 2. Variables más importantes ---
+                        if "CaracterísticasImportantes" in prediccion:
+                            df_top_filtered = preparar_df_importancias(prediccion)
+                            fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
+                            st.pyplot(fig_importancias_abonado)
+
+                            frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
+                            st.markdown(f"**Resumen del riesgo**: {frase_resumen}")
+
+                        # --- 3. Explicación del modelo ---
+                        
+                        st.markdown("### Comportamiento del riesgo: ")
+                        generar_explicacion_contexto(df_top_filtered)
+
+                        # --- 4. Estrategias de fidelización ---
                         if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
                             with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
                                 for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
                                     st.markdown(estrategia)
-                            st.balloons()  
+                            st.balloons()
                         else:
                             st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
                 else:
                     st.error("La respuesta no es una lista válida.")
-            else:
-                st.error("⚠️ No se obtuvo respuesta de la API.")
-
         except ValueError:
             st.error("⚠️ Por favor, introduce solo números separados por comas")
-
-
 
 # ------------------- #
 # TAB 3: Valoración
@@ -454,71 +571,16 @@ with tabs[3]:
             st.markdown("<h3 style='color: #888;'>Estrategias de Fidelización:</h3>", unsafe_allow_html=True)
             st.markdown("Selecciona el nivel de riesgo de abandono de los usuarios para ver las estrategias de fidelización recomendadas.")
 
+            
+
             # Selector de riesgo
             nivel_riesgo = st.selectbox("Selecciona el Nivel de Riesgo:", 
                                         ["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"])
 
-            # Acordeones para cada nivel
-            if nivel_riesgo == "Muy Bajo":
-                with st.expander("Estrategias de fidelización para **Muy Bajo**"):
-                    st.markdown("""
-                        1. **`Programa de recompensas por uso continuo`**: Implementar un sistema de puntos para los usuarios frecuentes, que puedan canjear por descuentos, contenido exclusivo o productos premium.
-                        2. **`Acceso anticipado a nuevas funcionalidades`**: Los usuarios más activos y pagos pueden ser invitados a probar nuevas funciones antes que el resto de los usuarios. Esto crea un sentido de exclusividad.
-                        3. **`Beneficios por referencia`**: Ofrecer recompensas por recomendar la plataforma a amigos o colegas. Esto podría ser un mes gratis o un descuento para ambos (referente y referido).
-                        4. **`Ofertas personalizadas para el perfil de uso`**: Ofrecer descuentos o beneficios exclusivos basados en el comportamiento de uso del cliente. Ejemplo: si un usuario siempre usa una funcionalidad específica, enviarle ofertas relacionadas con esa funcionalidad.
-                        5. **`Eventos exclusivos en línea`**: Organizar eventos exclusivos como webinars o reuniones virtuales con expertos, donde solo los usuarios activos o pagos puedan participar.
-
-                    """)
-
-            elif nivel_riesgo == "Bajo":
-                with st.expander("Estrategias de fidelización para **Bajo**"):
-                    st.markdown("""
-                        1. **`Descuentos en renovación de suscripción`**: Ofrecer descuentos significativos si renuevan su suscripción o realizan pagos adicionales dentro de un corto periodo de tiempo
-                        2. **`Campañas de retargeting personalizado`**: Utilizar datos de comportamiento para ofrecerles promociones o contenidos personalizados que los inviten a retomar la actividad en la plataforma.
-                        3. **`Notificaciones personalizadas con ofertas de valor`**: Enviar recordatorios de productos o funciones que han utilizado previamente, junto con ofertas especiales (ejemplo: "Vuelve y consigue 10% de descuento en tu próxima compra").
-                        4. **`Descuentos por uso frecuente`**: Ofrecer descuentos o recompensas para aquellos usuarios que incrementen su actividad durante el mes (por ejemplo, si usan la plataforma 10 días consecutivos, obtienen un descuento del 15%).
-                        5. **`Recompensas por interacción con nuevas funciones`**: Incentivar a los usuarios a explorar nuevas características de la plataforma ofreciendo un beneficio como un mes adicional de suscripción o puntos de recompensa.
-                    """)
-
-            elif nivel_riesgo == "Medio":
-                with st.expander("Estrategias de fidelización para **Medio**"):
-                    st.markdown("""
-                        1. **`Ofertas de reactivación personalizadas`**: Enviar un correo o notificación push ofreciendo un descuento importante o acceso a contenido exclusivo si regresan a la plataforma dentro de un plazo determinado.
-                        2. **`Recordatorio de funcionalidades no utilizadas`**: Utilizar los datos de comportamiento para enviar mensajes recordando las funcionalidades que no han sido exploradas por el usuario, ofreciendo tutoriales o guías rápidas.
-                        3. **`Campañas de contenido exclusivo para inactivos`**: Crear un catálogo de contenido exclusivo (tutoriales, seminarios web, o artículos premium) disponible solo para aquellos usuarios que regresen después de un periodo de inactividad.
-                        4. **`Ofrecer acceso a nuevas funcionalidades por tiempo limitado`**: Probar nuevas características de la plataforma de forma gratuita por un tiempo limitado a usuarios que han estado inactivos durante cierto periodo.
-                        5. **`Notificaciones de "última oportunidad"`**: Enviar un correo con un asunto como “Última oportunidad para obtener tus beneficios exclusivos”, creando un sentido de urgencia.
-                    """)
-
-            elif nivel_riesgo == "Alto":
-                with st.expander("Estrategias de fidelización para **Alto**"):
-                    st.markdown("""
-                        1. **`Descuentos en el primer pago`**: Ofrecer descuentos agresivos o promociones de "primer pago gratis" si el usuario completa la conversión de gratuito a pago (por ejemplo, "Obtén un mes gratis si te suscribes ahora").
-                        2. **`Llamadas de atención personalizadas`**: Contactar directamente con estos usuarios a través de soporte al cliente o ventas para entender las razones de su baja actividad y ofrecer una solución personalizada (por ejemplo, “¿Te gustaría una sesión de asesoramiento para mejorar tu experiencia?”).
-                        3. **`Oferta de planes flexibles o a medida`**: Crear opciones de pago más flexibles o planes personalizados según el uso que hacen los usuarios. Ofrecer un “plan básico” para que comiencen a pagar a bajo costo.
-                        4. **`Campañas de reactivación urgente`**: Ofrecer grandes descuentos (como un 70% de descuento por tres meses) o beneficios adicionales si reactivan su cuenta dentro de las próximas 24 horas.
-                        5. **`Ofrecer sesiones de soporte o consultoría gratuita`**: Ofrecer sesiones gratuitas con un experto para guiar a los usuarios sobre cómo sacar el máximo provecho de la plataforma.
-                    """)
-
-            elif nivel_riesgo == "Muy Alto":
-                with st.expander("Estrategias de Fidelización para **Muy Alto**"):
-                    st.markdown("""
-                        1. **`Campañas de recuperación con descuentos masivos`**: Ofrecer un descuento profundo como "90% de descuento en el primer mes si te suscribes ahora", para atraerlos a volver, aunque solo sea para probar la plataforma nuevamente.
-                        2. **`Encuestas de salida con incentivos`**: Enviar encuestas de salida con una recompensa por completarlas (por ejemplo, “dinos por qué te vas y recibe un 50% de descuento en tu próxima compra”).
-                        3. **`Planes gratuitos por tiempo limitado`**: Ofrecer un acceso completo y gratuito por 1 mes a todos los servicios premium, con la intención de engancharlos nuevamente a la plataforma.
-                        4. **`Comunicación directa de recuperación (SMS o Llamada)`**: Si es posible, contactar directamente con el usuario por teléfono o SMS para entender por qué no se están comprometiendo y ofrecer una oferta personalizada.
-                        5. **`Experiencia de onboarding personalizada`**: Crear una experiencia de reactivación guiada, con contenido paso a paso para que el usuario vuelva a usar la plataforma, mostrando cómo resolver sus puntos de dolor de manera efectiva.
-                    """)
+            # Mostrar estrategias según el nivel
+            mostrar_estrategias(nivel_riesgo)
 
 
-st.markdown("""
-<footer style='text-align:center; font-size:12px; color:#888;'>
-<p>© 2025 Cesc Blanco | Contacto: cesc.blanco98@gmail.com | Sígueme en LinkedIn: Cesc Blanco Arnau</p>
-</footer>
-""", unsafe_allow_html=True)
-
-    # st.download_button(
-    # label="Descargar CSV",
-    # data=archivo,
-    # file_name="archivo.csv",
-    # mime="text/csv")
+st.markdown("""<footer style='text-align:center; font-size:12px; color:#888;'>
+    <p> © 2025 Cesc Blanco | Contacto: <a href='mailto:cesc.blanco98@gmail.com'>cesc.blanco98@gmail.com</a> | 
+             Sígueme en LinkedIn: <a href='https://www.linkedin.com/in/cescblanco' target='_blank'>LinkedIn</a> </p></footer>""", unsafe_allow_html=True)

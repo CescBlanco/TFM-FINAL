@@ -159,3 +159,12 @@ flowchart TD
     F --> G[Formato de salida / guardado]
     G --> H[Almacenamiento]
     H --> I[Auditoría y trazabilidad]
+
+Ejemplo de abandono para un ID: 103700
+
+![alt text](image-1.png)
+![alt text](image.png)
+
+![alt text](image-2.png)
+
+![alt text](image-3.png)
