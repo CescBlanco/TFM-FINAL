@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from mlflow import *
+
+LOGO_GYM= "streamlit/assets/cem_horta-removebg-preview.png"
+LOGO_AYUNTAMIENTO = "streamlit/assets/LOGO-AJUNTAMENT.png"
+
 # URL de tu API local
 API_URL = "http://localhost:8000"
 
@@ -19,6 +23,26 @@ BOOL_COL = ["Sexo_Mujer", "UsoServiciosExtra", "TienePagos", "TieneAccesos",
                     "DiaFav_miercoles", "DiaFav_sabado", "DiaFav_viernes",
                     "EstFav_invierno", "EstFav_otono", "EstFav_primavera", "EstFav_verano"
                 ]
+
+
+NAME_EXPERIMENT_3= 'Experimento_v3'   
+NAME_EXPERIMENT_2 = 'Experimento_v2'
+NAME_EXPERIMENT_1 = 'Experimento_v1'
+METRIC= 'auc'
+
+
+#RUN IDs para las validaciones del experimento 1 y 2.
+RUN_ID_INF_1= '7ec94007ba584b68b695afa7e79825cc'
+RUN_ID_INF_2= '217f131f5f8246d0b56d201738790051'     
+RUN_ID_INF_3 = "73233a8103ba4517bdd5f7f9b4b2576e"  #RunID pegado despuès de encontrarlo en MLFLow IU (experimento3)
+
+
+
+#Ruta donde se guardaran cada artefacto segun el experimento 1 y 2 (no usados)
+FOLDER_DESTINO_1 = 'mlops_api/data_mlops_api/inferencia_predicciones_exp1'
+FOLDER_DESTINO_2 = 'mlops_api/data_mlops_api/inferencia_predicciones_exp2'
+# Ruta donde se guardarán los artefactos descargados de la inferencia 3 (la importante)
+FOLDER_DESTINO_3= 'mlops_api/data_mlops_api/inferencia_predicciones_exp3'
 
 def cargar_columnas_modelo(path):
     try:

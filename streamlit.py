@@ -15,13 +15,11 @@ from funciones_streamlit import *
 col1, colspace, col3 = st.columns([1,3,1])
 
 with col1:
-    # Mostrar el logo
-    logo = "streamlit/assets/cem_horta-removebg-preview.png"
-    st.image(logo, width=175)
+    # Mostrar el logo gym
+    st.image(LOGO_GYM, width=175)
 
 with col3:
-    logo = "streamlit/assets/LOGO-AJUNTAMENT.png"
-    st.image(logo, width=175)
+    st.image(LOGO_AYUNTAMIENTO, width=175)
 # Configuración de la página
 st.set_page_config(page_title="App de Predicción de Abandono", layout="wide")
 # Usar markdown para centrar el título
@@ -235,33 +233,14 @@ with tabs[2]:
 # ------------------- #
 # TAB 3: Valoración
 # ------------------- #
-with tabs[3]:
-        NAME_EXPERIMENT_3= 'Experimento_v3'   
-        NAME_EXPERIMENT_2 = 'Experimento_v2'
-        NAME_EXPERIMENT_1 = 'Experimento_v1'
-        METRIC= 'auc'
-        run_id_inf = "73233a8103ba4517bdd5f7f9b4b2576e"  #RunID pegado despuès de encontrarlo en MLFLow IU (experimento3)
-
-        #RUN IDs para las validaciones del experimento 1 y 2.
-        run_id_inf_1= '7ec94007ba584b68b695afa7e79825cc'
-        run_id_inf_2= '217f131f5f8246d0b56d201738790051'     
-
-        # Ruta donde se guardarán los artefactos descargados de la inferencia 3 (la importante)
-        folder_destino= 'mlops_api/data_mlops_api/inferencia_predicciones_exp3'
-
-        #Ruta donde se guardaran cada artefacto segun el experimento 1 y 2 (no usados)
-        folder_destino_exp1 = 'mlops_api/data_mlops_api/inferencia_predicciones_exp1'
-        folder_destino_exp2 = 'mlops_api/data_mlops_api/inferencia_predicciones_exp2'
-
-       
-   
-        df_archivo_global_exp3, df_archivo_persona_ex3, df_archivo_preds_ex3 = encontrar_csv_inferencias(NAME_EXPERIMENT_3, folder_destino, run_id_inf)
-        df_archivo_global_exp2, df_archivo_persona_ex2, df_archivo_preds_ex2 = encontrar_csv_inferencias(NAME_EXPERIMENT_2, folder_destino_exp2, run_id_inf_2)
-        df_archivo_global_exp1, df_archivo_persona_ex1, df_archivo_preds_ex1 = encontrar_csv_inferencias(NAME_EXPERIMENT_1, folder_destino_exp1, run_id_inf_1)
+with tabs[3]: 
+        df_archivo_global_exp3, df_archivo_persona_ex3, df_archivo_preds_ex3 = encontrar_csv_inferencias(NAME_EXPERIMENT_3, FOLDER_DESTINO_3, RUN_ID_INF_3)
+        df_archivo_global_exp2, df_archivo_persona_ex2, df_archivo_preds_ex2 = encontrar_csv_inferencias(NAME_EXPERIMENT_2, FOLDER_DESTINO_3, RUN_ID_INF_2)
+        df_archivo_global_exp1, df_archivo_persona_ex1, df_archivo_preds_ex1 = encontrar_csv_inferencias(NAME_EXPERIMENT_1, FOLDER_DESTINO_1, RUN_ID_INF_1)
 
         #Encontrar las metricas del modelo usado: Experimento 3 y su inferencia
         auc_exp3, accuracy_exp3, f1_exp3, recall_exp3= encontrar_metricas_experimento(NAME_EXPERIMENT_3, metric=METRIC)
-        accuracy, auc, f1, recall= encontrar_metricas_inferencia(run_id_inf)
+        accuracy, auc, f1, recall= encontrar_metricas_inferencia(RUN_ID_INF_3)
         
         view_option = st.radio("Elige la vista:", ("Mostrar modelo entrenado", "Mostrar modelo post inferencia"), horizontal=True)
 
@@ -285,6 +264,7 @@ with tabs[3]:
                 fig_importnacias_exp1= plot_importancias(df_archivo_global_exp1)
                 # Mostrar gráfico en Streamlit
                 st.pyplot(fig_importnacias_exp1)
+            
             st.markdown(' ')
             st.markdown("""
                 🧑‍💻📊 Interpretación técnica:
