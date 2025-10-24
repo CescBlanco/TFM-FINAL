@@ -9,7 +9,7 @@ import os
 import joblib
 import json
 from datetime import datetime
-
+import random
 # PATH para guardar predicciones.
 PREDICCIONES_PATH = "data_mlops_api/predicciones_api.csv"
 mlflow.set_tracking_uri("file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns")
@@ -107,7 +107,7 @@ def guardar_predicciones_api(idpersona, variables, pred, prob, nivel, endpoint, 
     Retorna:
         None
     """
-
+    print(f"Guardando predicción para IdPersona: {idpersona}")
     # Crear el registro con los resultados de la predicción
     registro = {
         "IdPersona": idpersona,
@@ -389,23 +389,23 @@ def index():
 
     return {"mensaje": "API de predicción de abandono con modelo entrenado en MLflow"}
 
-
-@app.post("/predecir_abandono/", summary="Predicción por datos completos (uno o varios)")
-def predecir_abandono(data: Union[UserData, MultiUserData]):
+#FUNCIONA
+@app.post("/predecir_abandono_socio_simulado/", summary="Predicción por datos simulados de usuario")
+def predecir_abandono_socio_simulado(data: Union[UserData, MultiUserData]):
     """
-    Endpoint para realizar una predicción de abandono para uno o varios usuarios, utilizando los datos de entrada proporcionados.
+    Endpoint para realizar una predicción de abandono para uno o varios usuarios simulados,
+    utilizando los datos de entrada proporcionados.
     
     Parámetros:
         data (Union[UserData, MultiUserData]): Datos de usuario (uno o varios).
     
     Retorna:
         dict: Resultado de la predicción, incluyendo probabilidad, nivel de riesgo y características importantes.
-    
-    Lanza:
-        HTTPException: Si las columnas no coinciden con las esperadas.
     """
+    # Si es un solo usuario
     if isinstance(data, UserData):
         df = pd.DataFrame([data.dict()])
+    # Si es más de un usuario
     else:
         df = pd.DataFrame([d.dict() for d in data.datos])
 
@@ -415,45 +415,108 @@ def predecir_abandono(data: Union[UserData, MultiUserData]):
                  'DiaFav_miercoles', 'DiaFav_sabado', 'DiaFav_viernes',
                  'EstFav_invierno', 'EstFav_otono', 'EstFav_primavera', 'EstFav_verano']
     df[bool_cols] = df[bool_cols].astype(int)
+
+    # Filtrar las columnas que se usan en el modelo
     df = df[columnas_modelo3]
+
+    # Verificación de columnas necesarias
     errores = validar_columnas_esperadas(df, columnas_modelo3)
     if errores:
         raise HTTPException(status_code=400, detail="; ".join(errores))
 
+    # Realizar la predicción
     X_scaled = scaler.transform(df)
-
     prediccion = modelo.predict(X_scaled)[0]
     probabilidad = modelo.predict_proba(X_scaled)[0][1]  # Probabilidad de clase 1 (abandono)
 
     # Categorizar el nivel de riesgo
     niveles = pd.cut(
-        probabilidad, bins=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],
+        [probabilidad], bins=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],
         include_lowest=True)
-    
-    # Obtener la importancia de las características por persona
+
+    # Generar un ID simulado único (esto es lo que agregas para tus usuarios simulados)
+    id_simulado = random.randint(100000, 999999)  # Aquí generas un ID único para el usuario simulado
+
+        # Obtener la importancia de las características por persona
     importancia_por_persona_df = obtener_importancia_por_persona(modelo, X_scaled, df.columns)
-    
-    # Guardar los resultados de la predicción en CSV
+
+    # Guardar los resultados de la predicción en CSV (solo como ejemplo, ajusta según necesites)
     guardar_predicciones_api(
-        idpersona=data.IdPersona,  # Asegúrate de que estás pasando el ID correcto
-        variables=data.dict(),  # O las variables que corresponda
+        idpersona=id_simulado,  # Aquí usas el ID simulado
+        variables=data.dict() if isinstance(data, UserData) else [d.dict() for d in data.datos],
         pred=prediccion,
         prob=probabilidad,
         nivel=niveles[0],
-        endpoint="/predecir_abandono",
-        run_id=mejor_info['run_id'],  # O el run_id correspondiente
-        importancia_variables= importancia_por_persona_df,
-        )
+        endpoint="/predecir_abandono_socio_simulado",
+        run_id=mejor_info['run_id'],  # Asegúrate de tener el run_id correspondiente
+        importancia_variables=importancia_por_persona_df,  # Si no estás calculando la importancia aquí, ponlo como None
+    )
 
-    # Crear los resultados
+    # Crear el resultado de la predicción
     resultados = [{
+        "IdPersona": id_simulado,  # Aquí devolvemos el ID simulado
         "ProbabilidadAbandono": round(probabilidad, 3),
-        "NivelRiesgo": niveles,
-        "CaracterísticasImportantes": importancia_por_persona_df.to_dict(orient="records")  # Devolvemos los resultados de las importancias
+        "NivelRiesgo": niveles[0],
+        "CaracterísticasImportantes":importancia_por_persona_df  # Aquí también puedes incluir las características importantes si las calculas
     }]
     
-    return resultados[0] if isinstance(data, UserData) else resultados
+    return resultados if isinstance(data, MultiUserData) else resultados[0]
 
+# @app.post("/predecir_abandono/", summary="Predicción por datos completos (uno o varios)")
+# def predecir_abandono(data: Union[UserData, MultiUserData]):
+#     """
+#     Endpoint para realizar una predicción de abandono para uno o varios usuarios, utilizando los datos de entrada proporcionados.
+    
+#     Parámetros:
+#         data (Union[UserData, MultiUserData]): Datos de usuario (uno o varios).
+    
+#     Retorna:
+#         dict: Resultado de la predicción, incluyendo probabilidad, nivel de riesgo y características importantes.
+    
+#     Lanza:
+#         HTTPException: Si las columnas no coinciden con las esperadas.
+#     """
+#     if isinstance(data, UserData):
+#         df = pd.DataFrame([data.dict()])
+      
+#     else:
+#         df = pd.DataFrame([d.dict() for d in data.datos])
+        
+
+#     # Asegurarse de que las columnas booleanas se conviertan a enteros
+#     bool_cols = ['Sexo_Mujer', 'UsoServiciosExtra', 'TienePagos', 'TieneAccesos',
+#                  'DiaFav_domingo', 'DiaFav_jueves', 'DiaFav_lunes', 'DiaFav_martes',
+#                  'DiaFav_miercoles', 'DiaFav_sabado', 'DiaFav_viernes',
+#                  'EstFav_invierno', 'EstFav_otono', 'EstFav_primavera', 'EstFav_verano']
+#     df[bool_cols] = df[bool_cols].astype(int)
+#     df = df[columnas_modelo3]
+#     errores = validar_columnas_esperadas(df, columnas_modelo3)
+#     if errores:
+#         raise HTTPException(status_code=400, detail="; ".join(errores))
+
+#     X_scaled = scaler.transform(df)
+
+#     prediccion = modelo.predict(X_scaled)[0]
+#     probabilidad = modelo.predict_proba(X_scaled)[0][1]  # Probabilidad de clase 1 (abandono)
+    
+#     # Categorizar el nivel de riesgo
+#     niveles = pd.cut(
+#         [probabilidad], bins=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"],
+#         include_lowest=True)
+    
+#     # Obtener la importancia de las características por persona
+#     importancia_por_persona_df = obtener_importancia_por_persona(modelo, X_scaled, df.columns)
+
+#     # Crear los resultados
+#     resultados = [{
+#         "ProbabilidadAbandono": round(probabilidad, 3),
+#         "NivelRiesgo": niveles,
+#         "CaracterísticasImportantes": importancia_por_persona_df.to_dict(orient="records")  # Devolvemos los resultados de las importancias
+#     }]
+    
+#     return resultados[0] if isinstance(data, UserData) else resultados
+
+#FUNCIONA
 @app.post("/predecir_abandono_por_id/", summary='Predicción por IdPersona')
 def predecir_abandono_por_id(request: IDRequest):
     """
@@ -523,6 +586,7 @@ def predecir_abandono_por_id(request: IDRequest):
         "CaracterísticasImportantes": importancia_por_persona_df.to_dict(orient="records")  # Devolvemos los resultados de las importancias
     }
 
+#FUNCIONA
 @app.post("/predecir_abandono_por_ids/", summary='Predicción por lista de IdPersona')
 def predecir_abandono_por_ids(request: IDListRequest):
     """
