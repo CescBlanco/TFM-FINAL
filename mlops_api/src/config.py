@@ -19,7 +19,7 @@ Estos conjuntos de características se utilizan para realizar entrenamientos y v
 """
 
 # Definición de las rutas de los archivos de datos
-DATA_PATH = "https://raw.githubusercontent.com/CescBlanco/TFM-FINAL/main/mlops_api/data_mlops_api/dataframe_final_abonado.csv"
+DATA_PATH = DATA_PATH = os.path.join( "mlops_api/data_mlops_api", "dataframe_final_abonado.csv")
 
 VALIDATION_OUTPUT_PATH = os.path.join( "mlops_api/data_mlops_api")
 

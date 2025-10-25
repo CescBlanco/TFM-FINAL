@@ -436,15 +436,15 @@ with tabs[2]:
                         # Si no existen estrategias, mostrar un mensaje de advertencia
                         st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
                 # Si todas las predicciones fueron exitosas, mostramos el mensaje de éxito
-            if all_success:
-                # Usamos st.empty() para crear un contenedor vacío
-                success_message = st.empty()
-                # Mostrar el mensaje de éxito
-                success_message.success("✅ Predicción obtenida")
-                # Esperamos un segundo antes de borrar el mensaje
-                time.sleep(1)
-                # Borramos el mensaje de éxito
-                success_message.empty()
+                if all_success:
+                    # Usamos st.empty() para crear un contenedor vacío
+                    success_message = st.empty()
+                    # Mostrar el mensaje de éxito
+                    success_message.success("✅ Predicción obtenida")
+                    # Esperamos un segundo antes de borrar el mensaje
+                    time.sleep(1)
+                    # Borramos el mensaje de éxito
+                    success_message.empty()
 
         except ValueError:
             # Si el usuario introduce un valor no válido (por ejemplo, letras en lugar de números), mostrar un error
@@ -471,7 +471,7 @@ with tabs[3]:
         if view_option == 'Mostrar modelo entrenado':
 
             # Leer el archivo CSV con el modelo inicial entrenado (archivo con datos históricos)
-            file_path_inicial = "https://raw.githubusercontent.com/CescBlanco/TFM-FINAL/main/mlops_api/data_mlops_api/dataframe_final_abonado.csv"
+            file_path_inicial = "file_path_inicial = 'mlops_api\data_mlops_api\dataframe_final_abonado.csv'"
 
             df_modelo_inicial = pd.read_csv(file_path_inicial)
             
