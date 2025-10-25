@@ -218,7 +218,10 @@ accessos.ipynb
 economia.ipynb
 servicios.ipynb
 archivo_final.ipynb
+pruebas.ipynb
+models.ipynb
 
+*.ipynb
 mlruns
 
 
