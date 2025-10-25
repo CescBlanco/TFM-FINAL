@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/706858199967561979/1430684050bb4aab9510bfb153c0c161/artifacts
+deleted_time: 1761383522505
+end_time: 1761383276932
+entry_point_name: ''
+experiment_id: '706858199967561979'
+lifecycle_stage: deleted
+run_id: 1430684050bb4aab9510bfb153c0c161
+run_name: SVM
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761383269455
+status: 3
+tags: []
+user_id: cescb

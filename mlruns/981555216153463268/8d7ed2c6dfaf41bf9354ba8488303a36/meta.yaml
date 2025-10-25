@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/981555216153463268/8d7ed2c6dfaf41bf9354ba8488303a36/artifacts
+end_time: 1761211433154
+entry_point_name: ''
+experiment_id: '981555216153463268'
+lifecycle_stage: active
+run_id: 8d7ed2c6dfaf41bf9354ba8488303a36
+run_name: Gradient Boosting
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761211428552
+status: 3
+tags: []
+user_id: cescb

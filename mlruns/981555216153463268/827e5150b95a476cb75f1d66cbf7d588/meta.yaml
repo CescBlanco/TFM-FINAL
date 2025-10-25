@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/981555216153463268/827e5150b95a476cb75f1d66cbf7d588/artifacts
+deleted_time: 1761383536455
+end_time: 1761383191039
+entry_point_name: ''
+experiment_id: '981555216153463268'
+lifecycle_stage: deleted
+run_id: 827e5150b95a476cb75f1d66cbf7d588
+run_name: Logistic Regression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761383176024
+status: 3
+tags: []
+user_id: cescb

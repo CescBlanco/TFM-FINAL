@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/981555216153463268/models/m-05b4e7d64fc14514983247fbdc9df9f1/artifacts
+creation_timestamp: 1761211440385
+experiment_id: '981555216153463268'
+last_updated_timestamp: 1761211444546
+model_id: m-05b4e7d64fc14514983247fbdc9df9f1
+model_type: null
+name: model
+source_run_id: 325d7633892145389d76ebded20f3e22
+status: 2
+status_message: null

@@ -1,0 +1,22 @@
+artifact_path: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/981555216153463268/models/m-1b308f79e3974099abaeffb568da8e1a/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.4
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.2
+mlflow_version: 3.5.0
+model_id: m-1b308f79e3974099abaeffb568da8e1a
+model_size_bytes: 13201168
+model_uuid: m-1b308f79e3974099abaeffb568da8e1a
+prompts: null
+run_id: 8bf7cd523f8547c1b07d45196b383a2c
+utc_time_created: '2025-10-25 09:06:35.997902'

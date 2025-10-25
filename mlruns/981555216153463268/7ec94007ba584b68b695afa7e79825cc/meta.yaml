@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns/981555216153463268/7ec94007ba584b68b695afa7e79825cc/artifacts
+end_time: 1761211619394
+entry_point_name: ''
+experiment_id: '981555216153463268'
+lifecycle_stage: active
+run_id: 7ec94007ba584b68b695afa7e79825cc
+run_name: validacion_externa_Experimento_v1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761211619164
+status: 3
+tags: []
+user_id: cescb
