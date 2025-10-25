@@ -15,35 +15,49 @@ from funciones_streamlit import *
 col1, colspace, col3 = st.columns([1,3,1])
 
 with col1:
-    # Mostrar el logo gym
+    # Mostrar el logo del gimnasio con un ancho específico de 175 píxeles
     st.image(LOGO_GYM, width=175)
 
 with col3:
+    # Mostrar el logo del ayuntamiento con un ancho específico de 175 píxeles
     st.image(LOGO_AYUNTAMIENTO, width=175)
-# Configuración de la página
+
+# Configuración de la página en Streamlit: título y layout
 st.set_page_config(page_title="App de Predicción de Abandono", layout="wide")
-# Usar markdown para centrar el título
+
+# Usar Markdown para centrar el título de la página y darle color
 st.markdown("<h1 style='text-align: center; color: #66BB6A;'>Predicción de Abandono: CEM Horta Esportiva</h1>", unsafe_allow_html=True)
 
-# Tabs para las diferentes opciones
+# Crear una barra de pestañas (tabs) para las diferentes opciones de la aplicación
 tabs = st.tabs([":bar_chart: Datos inventados", ":id: Un abonado", ":memo: Múltiples abonados", ":mag: Valoración modelos"])
 
 # ------------------- #
 # TAB 1: Datos individuales
 # ------------------- #
-with tabs[0]:
-    st.markdown("<h2 style='color: #888;'>📝 Datos de Entrada del Abonado</h2>", unsafe_allow_html=True)
 
+with tabs[0]:
+    
+    # Título de la sección de entrada de datos
+    st.markdown("<h2 style='color: #888;'>📝 Datos de Entrada del Abonado</h2>", unsafe_allow_html=True)
+    
+    # Texto solicitando que se ingresen los datos del abonado para realizar la predicción
     st.write("Por favor, ingresa los datos del abonado para realizar la predicción.")
+
+    # Llamada a la función input_userdata() para obtener los datos del usuario (esto es un supuesto, la función debería existir)
     userdata = input_userdata()  # Suponiendo que esta función obtiene los datos del usuario
     
-    # Sección de predicción: claramente diferenciada
     st.write('----')
+
+    # Título para la sección de predicción
     st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
+
+    # Instrucción para hacer clic en el botón para realizar la predicción
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
 
+    # Botón para iniciar la predicción para un abonado inventado
     if st.button("🚀 Iniciar Predicción para un abonado inventado", key="btn_individual"):
-         # Crear un contenedor vacío para el mensaje de "Calculando..."
+        
+        # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
         # Mostrar el mensaje de "Calculando..."
         calculating_message.write("Calculando las predicciones de abandono... ")
@@ -52,42 +66,48 @@ with tabs[0]:
         # Ahora, también borramos el mensaje de "Calculando..."
         calculating_message.empty()
         
-
+        # Crear una lista vacía para almacenar los resultados de la predicción
         resultados = []
+
         # Convertir los valores booleanos a True/False, sin cambiar a 1/0
+        # Esto se hace para asegurar que el modelo recibe los datos en el formato adecuado (True/False)
         for col in BOOL_COL:
             if col in userdata:
                 userdata[col] = True if userdata[col] else False
         
-        # Verificar que los datos del usuario sean completos
-        required_columns = set(COLUMNAS_MODELO)
-        if not required_columns.issubset(userdata.keys()):
+        # Verificar que los datos del usuario contienen todas las columnas necesarias para la predicción
+        required_columns = set(COLUMNAS_MODELO) # Establece las columnas necesarias para el modelo
+        
+        if not required_columns.issubset(userdata.keys()):  # Si falta alguna columna
             st.error("⚠️ Faltan algunas columnas necesarias.")
         else:
-                # Realizar la predicción
+            # Realizar la predicción
             response = obtener_predicciones_api("predecir_abandono_socio_simulado/", userdata)
-             # Usamos st.empty() para crear un contenedor vacío
+            
+            # Usamos st.empty() para crear un contenedor vacío
             success_message = st.empty()
-
             # Mostrar el mensaje de éxito
             success_message.success("✅ Predicción obtenida")
-
             # Esperamos un segundo antes de borrar el mensaje
             time.sleep(1)
-
             # Borramos el mensaje de éxito
             success_message.empty()
-                        
+
+            # Verificar que la respuesta sea un diccionario (es la forma esperada)            
             if isinstance(response, dict):  # Verifica que la respuesta es un diccionario
-                res = response
-                res['IdPersona'] = res.get('IdPersona', 'Simulado')  # Asignar un id simulado si no existe
-                probabilidad = res.get("ProbabilidadAbandono", 0)
-                nivel_riesgo = res.get("NivelRiesgo", "Desconocido")
+                res = response # Almacena la respuesta en la variable 'res'
+                res['IdPersona'] = res.get('IdPersona', 'Simulado') # Si no existe 'IdPersona', asigna un valor simulado
+                probabilidad = res.get("ProbabilidadAbandono", 0) # Obtiene la probabilidad de abandono (valor por defecto es 0)
+                nivel_riesgo = res.get("NivelRiesgo", "Desconocido") # Obtiene el nivel de riesgo (valor por defecto es "Desconocido")
                 
 
-                # Verifica que los datos no sean None o vacíos
+                # Verifica que los datos de probabilidad y nivel de riesgo sean válidos
                 if probabilidad is not None and nivel_riesgo:
+
+                    # Usar la función 'color_con_riesgo' para obtener el color y el nivel de riesgo
                     color, nivel = color_con_riesgo(probabilidad)
+                    
+                    # Mostrar la probabilidad de abandono y el nivel de riesgo con el color correspondiente
                     st.markdown(
                         f"""
                         <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
@@ -97,20 +117,28 @@ with tabs[0]:
                         unsafe_allow_html=True
                     )
                 else:
+
+                    # Si no se encuentra la probabilidad o el nivel de riesgo, mostrar un mensaje de advertencia
                     st.warning("❌ No se encontró información sobre la probabilidad de abandono.")
+                
+                # Mostrar un espacio vacío para separar secciones
                 st.markdown(" ")
                 st.markdown("### Lo que impacta en la probabilidad del abonado:")
                 st.markdown(" ")
 
-                # --- 2. Variables más importantes ---
+                # Verificar si la respuesta contiene la clave 'CaracterísticasImportantes', que es donde están las variables del modelo
                 if "CaracterísticasImportantes" in response:
                     
+                    # Llamar a la función que prepara el dataframe de las variables más importantes
                     df_top_filtered = preparar_df_importancias(response)
                     
-                    
+                    # Llamar a la función para generar el gráfico de barras con las importancias de las variables
                     fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
+                    
+                    # Mostrar el gráfico generado con Streamlit
                     st.pyplot(fig_importancias_abonado)
-                
+
+                    # Generar un resumen sobre las variables que afectan al riesgo de abandono
                     frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
             
                     # Mostrarla en Streamlit
@@ -119,45 +147,64 @@ with tabs[0]:
                     
                     # --- 3. Explicación del modelo ---
                     st.markdown("")
-
+                
+                    # Título para la sección donde se explica el comportamiento del modelo y el riesgo de abandono
                     st.markdown("### Comportamiento del riesgo: ")
-
+                    
+                    # Llamada a la función que genera la explicación detallada de las variables que afectan al riesgo
                     generar_explicacion_contexto(df_top_filtered)
 
                 st.subheader(" ")
                 st.subheader("Acción de fidelización: ")
                 
                 # --- 4. Estrategias de fidelización ---
+
+                # Obtener el 'IdPersona' del abonado y su 'NivelRiesgo' desde la respuesta de la predicción
                 id_persona = response.get("IdPersona")
                 nivel_riesgo = response.get("NivelRiesgo")
+    
+                # Verificar si el nivel de riesgo está en las estrategias de fidelización definidas en ESTRATEGIAS_FIDELIZACION
                 if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
+
+                    # Usar un 'expander' en Streamlit para mostrar las estrategias de fidelización solo si el nivel de riesgo tiene estrategias
                     with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
+                
+                        # Iterar sobre las estrategias disponibles para el nivel de riesgo y mostrarlas con Markdown
                         for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
                             st.markdown(estrategia)
+                    
+                    # Mostrar una animación de globos (para indicar algo positivo o una acción exitosa)
                     st.balloons()
                 else:
+                    # Si no se encontraron estrategias para el nivel de riesgo, mostrar una advertencia
                     st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")   
   
-
+            # Si no se obtuvo una respuesta válida para la predicción, mostrar un mensaje de error
             else:
                 st.warning(f"❌ Error en la predicción para IdPersona simulado")
-
-                 # Verificar si la respuesta es una cadena JSON y convertirla a un diccionario si es necesario         
 
 # ------------------- #
 # TAB 1: Un ID
 # ------------------- #
 with tabs[1]:
 
+    # Título para la sección de predicción por un abonado
     st.markdown("<h2 style='color: #888;'>Predicción por un abonado</h2>", unsafe_allow_html=True)
+
+    # Campo para ingresar el ID del abonado (un número entero)
     id_persona = st.number_input("Introduce el ID de la persona", min_value=0, step=1)
 
     st.write('----')
+
+    # Subtítulo para la sección de predicción
     st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
+
+    # Instrucciones para el usuario sobre el botón de predicción
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.") 
-    import json
-    
+
+    # Botón que inicia la predicción cuando es presionado
     if st.button("🚀 Iniciar Predicción por un abonado", key="btn_id"):
+        
         # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
         # Mostrar el mensaje de "Calculando..."
@@ -167,38 +214,42 @@ with tabs[1]:
         # Ahora, también borramos el mensaje de "Calculando..."
         calculating_message.empty()
 
+        # Crear un diccionario con el ID de la persona que el usuario ha introducido
         data = {"IdPersona": id_persona}
+
+        # Realizar la llamada a la API para obtener la predicción usando el ID de la persona
         response = obtener_predicciones_api("predecir_abandono_por_id/", data)
 
+        # Si no se obtiene respuesta de la API, mostrar un mensaje de error
         if not response:
             st.error("⚠️ No se obtuvo respuesta de la API.")
         else:
              # Usamos st.empty() para crear un contenedor vacío
             success_message = st.empty()
-
             # Mostrar el mensaje de éxito
             success_message.success("✅ Predicción obtenida")
-
             # Esperamos un segundo antes de borrar el mensaje
             time.sleep(1)
-
             # Borramos el mensaje de éxito
             success_message.empty()
-    
 
-            # Parsear JSON si es cadena
+            # Intentar parsear la respuesta si es una cadena JSON (puede ser en formato string)
             try:
                 if isinstance(response, str):
-                    response = json.loads(response)
+                    response = json.loads(response)  # Convertir la respuesta de JSON a un diccionario
             except json.JSONDecodeError as e:
                 st.error(f"Error al parsear la respuesta JSON: {e}")
                 response = None
-
+            
+            # Si la respuesta es válida, continuar con el procesamiento de los datos
             if response:
                 # --- 1. Probabilidad de abandono ---
-                probabilidad = response.get("ProbabilidadAbandono", 0)              
+                probabilidad = response.get("ProbabilidadAbandono", 0)   # Obtener la probabilidad de abandono desde la respuesta             
 
+                # Calcular el color y nivel de riesgo basados en la probabilidad
                 color, nivel= color_con_riesgo(probabilidad)
+            
+                # Mostrar la probabilidad de abandono con el color correspondiente
                 st.markdown(
                     f"""
                     <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
@@ -207,41 +258,58 @@ with tabs[1]:
                     """,
                     unsafe_allow_html=True
                 )
+
+                # Separación para mejorar la presentación
                 st.markdown(" ")
                 st.markdown("### Lo que impacta en la probabilidad del abonado:")
                 st.markdown(" ")
                 
                 # --- 2. Variables más importantes ---
+                # Verificar si la respuesta contiene la clave 'CaracterísticasImportantes' con las variables más relevantes
                 if "CaracterísticasImportantes" in response:
                     
+                    # Llamar a la función que prepara el dataframe de las variables más importantes
                     df_top_filtered = preparar_df_importancias(response)
                     
-                    
+                    # Generar el gráfico de las variables más importantes
                     fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
                     st.pyplot(fig_importancias_abonado)
                  
+                    # Generar una frase resumen con las variables que impactan en el riesgo
                     frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
             
                     # Mostrarla en Streamlit
                     st.markdown(f"**Resumen del riesgo**: {frase_resumen}")                  
  
                     st.markdown("")
-      
-                    st.markdown("### Comportamiento del riesgo: ")
 
+                    # Título para la sección de explicación del modelo
+                    st.markdown("### Comportamiento del riesgo: ")
+                    
+                    # Llamar a la función que genera la explicación del comportamiento del riesgo
                     generar_explicacion_contexto(df_top_filtered)
 
                 st.subheader(" ")
                 st.subheader("Acción de fidelización: ")
                 
                 # --- 4. Estrategias de fidelización ---
+                
+                # Obtener el ID de la persona y el nivel de riesgo desde la respuesta
                 id_persona = response.get("IdPersona")
                 nivel_riesgo = response.get("NivelRiesgo")
+
+                # Verificar si el nivel de riesgo tiene estrategias de fidelización definidas
                 if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
+
+                    # Mostrar las estrategias de fidelización en una sección expandible
                     with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
                         for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
                             st.markdown(estrategia)
+                    
+                    # Mostrar una animación de globos para indicar que se ha completado la acción
                     st.balloons()
+
+                # Si no existen estrategias para el nivel de riesgo, mostrar un mensaje de advertencia
                 else:
                     st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
 
@@ -251,15 +319,22 @@ with tabs[1]:
 # TAB 2: Múltiples IDs
 # ------------------- #
 with tabs[2]:
+
+    # Título para la sección de predicción por múltiples abonados
     st.markdown("<h2 style='color: #888;'>Predicción por múltiples abonados</h2>", unsafe_allow_html=True)
 
+    # Campo de entrada para que el usuario introduzca una lista de IDs separados por comas
     ids_input = st.text_area("Introduce los IDs de los abonados separados por comas", value="123,456,789")
 
+    # Subtítulo para la sección de predicción
     st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
 
+    # Instrucciones para el usuario sobre el botón de predicción
     st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
 
+    # Botón para iniciar la predicción para múltiples abonados
     if st.button("🚀 Iniciar Predicción por múltiples abonados", key="btn_ids"):
+
         # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
         # Mostrar el mensaje de "Calculando..."
@@ -270,113 +345,135 @@ with tabs[2]:
         calculating_message.empty()
 
         try:
-            # Obtener los IDs desde el input (como una lista)
+            
+            # Obtener los IDs de los abonados desde el input del usuario
+            # Convertir cada ID a un entero, eliminando cualquier espacio extra
             ids_list = [int(id_.strip()) for id_ in ids_input.split(",") if id_.strip()]
             data = {"Ids": ids_list}
             
-            # Obtener la respuesta de la API
+            # Obtener la respuesta de la API para la predicción
             response = obtener_predicciones_api("predecir_abandono_por_ids/", data)
 
+            # Si no se obtuvo respuesta de la API, mostrar un mensaje de error
             if not response:
                 st.error("⚠️ No se obtuvo respuesta de la API.")
             else:
+
                  # Usamos st.empty() para crear un contenedor vacío
                 success_message = st.empty()
-
                 # Mostrar el mensaje de éxito
                 success_message.success("✅ Predicción obtenida")
-
                 # Esperamos un segundo antes de borrar el mensaje
                 time.sleep(1)
-
                 # Borramos el mensaje de éxito
                 success_message.empty()
 
-                # Si la respuesta es una cadena JSON, convertirla
+                # Intentar parsear la respuesta si es una cadena JSON
                 try:
                     if isinstance(response, str):  # Si la respuesta es una cadena
                         response = json.loads(response)  # Convertir de JSON a diccionario
                 except json.JSONDecodeError as e:
                     st.error(f"Error al parsear la respuesta JSON: {e}")
 
-                # Procesar cada predicción en la respuesta si es una lista
+                # Verificar si la respuesta es una lista (esperada cuando se predicen múltiples abonados)
                 if isinstance(response, list):  # Si la respuesta es una lista
                     for prediccion in response:
+
                         # Asegurarse de que la predicción tenga la estructura correcta
                         id_persona = prediccion.get("IdPersona")
                         nivel_riesgo = prediccion.get("NivelRiesgo")
+                        
                         st.write("---")
                         st.write(f"### Predicción para el abonado con ID {id_persona}")
 
                         # --- 1. Probabilidad de abandono ---
-                        probabilidad = prediccion.get("ProbabilidadAbandono", 0)
-                        color, nivel = color_con_riesgo(probabilidad)
+                        probabilidad = prediccion.get("ProbabilidadAbandono", 0)  # Obtener la probabilidad de abandono de la predicción
+                        color, nivel = color_con_riesgo(probabilidad) # Obtener el color y nivel de riesgo según la probabilidad
+                        
                         st.markdown(
                             f"""
                             <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
                                 Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel})
                             </div>
                             """,
-                            unsafe_allow_html=True
-                        )
+                            unsafe_allow_html=True)
                         
                         # --- 2. Variables más importantes ---
-                        if "CaracterísticasImportantes" in prediccion:
-                            df_top_filtered = preparar_df_importancias(prediccion)
-                            fig_importancias_abonado = plot_abonado_importancias(df_top_filtered)
-                            st.pyplot(fig_importancias_abonado)
 
+                        # Verificar si la respuesta contiene las características importantes
+                        if "CaracterísticasImportantes" in prediccion:
+
+                            df_top_filtered = preparar_df_importancias(prediccion) # Preparar el dataframe de variables importantes
+                            fig_importancias_abonado = plot_abonado_importancias(df_top_filtered) # Graficar las variables importantes
+                            st.pyplot(fig_importancias_abonado)  # Mostrar el gráfico
+
+                            # Generar un resumen de riesgo basado en las variables
                             frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
                             st.markdown(f"**Resumen del riesgo**: {frase_resumen}")
 
                         # --- 3. Explicación del modelo ---
-                        
+                        # Explicar el comportamiento del riesgo del abonado
                         st.markdown("### Comportamiento del riesgo: ")
-                        generar_explicacion_contexto(df_top_filtered)
+                        generar_explicacion_contexto(df_top_filtered) # Llamar a la función que genera la explicación
 
                         # --- 4. Estrategias de fidelización ---
+
+                        # Verificar si existen estrategias de fidelización para este nivel de riesgo
                         if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
+                            
+                            # Mostrar las estrategias de fidelización en una sección expandible
                             with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
                                 for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
                                     st.markdown(estrategia)
-                            st.balloons()
+                            
+                            st.balloons() # Mostrar globos como animación
                         else:
+                            
+                            # Si no existen estrategias, mostrar un mensaje de advertencia
                             st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
                 else:
+                    # Si la respuesta no es una lista válida, mostrar un error
                     st.error("La respuesta no es una lista válida.")
+
         except ValueError:
+            # Si el usuario introduce un valor no válido (por ejemplo, letras en lugar de números), mostrar un error
             st.error("⚠️ Por favor, introduce solo números separados por comas")
 
 # ------------------- #
 # TAB 3: Valoración
 # ------------------- #
 with tabs[3]: 
+        
+        # Leer los archivos de los diferentes experimentos de inferencia
         df_archivo_global_exp3, df_archivo_persona_ex3, df_archivo_preds_ex3 = encontrar_csv_inferencias(NAME_EXPERIMENT_3, FOLDER_DESTINO_3, RUN_ID_INF_3)
         df_archivo_global_exp2, df_archivo_persona_ex2, df_archivo_preds_ex2 = encontrar_csv_inferencias(NAME_EXPERIMENT_2, FOLDER_DESTINO_3, RUN_ID_INF_2)
         df_archivo_global_exp1, df_archivo_persona_ex1, df_archivo_preds_ex1 = encontrar_csv_inferencias(NAME_EXPERIMENT_1, FOLDER_DESTINO_1, RUN_ID_INF_1)
 
-        #Encontrar las metricas del modelo usado: Experimento 3 y su inferencia
+        # Obtener las métricas de rendimiento del modelo para el experimento 3 (AUC, accuracy, F1, recall)
         auc_exp3, accuracy_exp3, f1_exp3, recall_exp3= encontrar_metricas_experimento(NAME_EXPERIMENT_3, metric=METRIC)
         accuracy, auc, f1, recall= encontrar_metricas_inferencia(RUN_ID_INF_3)
         
+        # Crear una opción de radio para que el usuario elija la vista: 'Mostrar modelo entrenado' o 'Mostrar modelo post inferencia'
         view_option = st.radio("Elige la vista:", ("Mostrar modelo entrenado", "Mostrar modelo post inferencia"), horizontal=True)
 
+        # Si el usuario elige 'Mostrar modelo entrenado'
         if view_option == 'Mostrar modelo entrenado':
-            # Ruta al archivo CSV en tu sistema local
-            file_path_inicial = 'mlops_api\data_mlops_api\dataframe_final_abonado.csv'
 
-            # Leer el CSV directamente
+            # Leer el archivo CSV con el modelo inicial entrenado (archivo con datos históricos)
+            file_path_inicial = 'mlops_api\data_mlops_api\dataframe_final_abonado.csv'
             df_modelo_inicial = pd.read_csv(file_path_inicial)
             
-            
+            # Título y justificación del Experimento 1
             st.markdown("<h3 style='color: #888;'>Justificación para experimento 1 (No usado):</h3>", unsafe_allow_html=True)
                      
             col1_exp1, col2_exp1 = st.columns(2)
 
+            # Gráfico 1: Analizar la variable 'TotalPagadoEconomia' del modelo
             with col1_exp1:
                 fig_exp_1= plots_experimentos_sinuso(df_modelo_inicial, 'TotalPagadoEconomia')
                 st.pyplot(fig_exp_1)
 
+            # Gráfico 2: Mostrar la importancia de las características para el experimento 1
             with col2_exp1:
                 fig_importnacias_exp1= plot_importancias(df_archivo_global_exp1)
                 # Mostrar gráfico en Streamlit
@@ -393,15 +490,20 @@ with tabs[3]:
                 - **`Decisión`** : Se decide eliminar esta variable para evitar el sesgo y permitir que el modelo considere mejor otras variables.        
                          """)
 
+            # Justificación del Experimento 2
             st.markdown("<h3 style='color: #888;'>Justificación para experimento 2 (No usado):</h3>", unsafe_allow_html=True)
         
             col1_exp2, col2_exp2 = st.columns(2)
 
             with col1_exp2:
+
+                # Gráfico 1: Analizar la variable 'VidaGymMeses' del modelo
                 fig_exp_2= plots_experimentos_sinuso(df_modelo_inicial, 'VidaGymMeses')
                 st.pyplot(fig_exp_2)
     
             with col2_exp2:
+
+                # Gráfico 2: Mostrar la importancia de las características para el experimento 2
                 fig_importnacias_exp2= plot_importancias(df_archivo_global_exp2)
                 # Mostrar gráfico en Streamlit
                 st.pyplot(fig_importnacias_exp2)
@@ -415,9 +517,12 @@ with tabs[3]:
                 - Este patrón podría hacer que el modelo se sobreajuste, ignorando otras variables importantes.
                 - **`Decisión`**: Se decide prescindir de esta variable para evitar que el modelo dependa de este valor umbral y así mejorar la inclusión de otras características.        
                 """)
-            
+    #-----------------------------------------------------------------------------------------------------------------------------------
+ 
+            # Justificación para la elección del Experimento 3
             st.markdown("<h3 style='color: #888;'>Justificación para la elección del experimento 3:</h3>", unsafe_allow_html=True)       
             
+            # Mostrar las métricas del modelo (AUC, Accuracy, F1, Recall)
             st.markdown(f"""
                 Rendimiento del modelo:
                         
@@ -430,7 +535,8 @@ with tabs[3]:
 
                 **`Comparativa`**: Este experimento supera a otros modelos porque maximiza la detección de abandonos sin generar demasiadas falsas alarmas.
                          """)
-            # Visualización del gráfico
+            
+             #   Visualización de la importancia de las variables para el experimento 3
             st.markdown("<h3 style='color: #888;'>Visualización de la importancia de las variables para el modelo:</h3>", unsafe_allow_html=True)
             
             
@@ -439,10 +545,11 @@ with tabs[3]:
             st.pyplot(fig_importnacias_exp3)
 
            
-            # Crear un expnder (spinner) para mostrar más información técnica y de negocio
+            # Crear un expander (expandir contenido) para mostrar más información técnica
             with st.expander("🔍 Más información sobre la importancia de variables"):
+                
                 # **Parte técnica - Data Science:**
-                st.markdown("""🧑‍💻📊 Interpretación técnica (Data Scientist / Data Analyst):""")
+                st.markdown("""🧑‍💻📊 Interpretación técnica:""")
 
                 st.markdown("""
                 - **`DiasActivo`**: La cantidad de días que un abonado ha estado activo es la **variable más importante**. Los abonados con menos días activos tienen una mayor probabilidad de abandonar.
@@ -494,48 +601,58 @@ with tabs[3]:
             - **Segmenta por edad y actividad**: Crea estrategias personalizadas según el nivel de actividad y la edad para mejorar la retención.
             """)
 
+        # Si el usuario elige 'Mostrar modelo post inferencia'
         elif view_option == 'Mostrar modelo post inferencia':
-            # Ruta al archivo CSV en tu sistema local
+
+            # Ruta al archivo CSV que contiene los datos de validación post-inferencia
             file_path = 'mlops_api/data_mlops_api/df_validacion_Experimento_v3.csv'
 
             
-            # Leer el CSV directamente
+            # Leer el archivo CSV de validación para obtener los datos post-inferencia
             df_validacion = pd.read_csv(file_path)
+
+            # Mostrar un título para la sección de inferencia
             st.markdown("<h2 style='color: #999;'>🧑‍💻📊 Interpretación de la inferencia</h2>", unsafe_allow_html=True)
 
             col1_inf, col2_inf= st.columns(2)
 
             with col1_inf:
+                
+                # Título para mostrar las métricas de rendimiento del modelo
                 st.markdown("<h5 style='color: #888;'>Rendimiento de la validación del modelo:</h5>", unsafe_allow_html=True)
 
+
+                # Mostrar las métricas de rendimiento obtenidas en el modelo post-inferencia
                 st.markdown(f"""
                                                 
                     - **`AUC`**: {auc} → Muy buena capacidad para diferenciar entre abonados que se quedarán y los que abandonarán.
                     - **`Accuracy`**: {accuracy} → Modelo fiable en general.
                     - **`F1-score`**: {f1} → Mantiene un buen equilibrio entre precisión y detección de abandonos.
-                    - **`Recall`**: {recall} → Detecta casi 8 de cada 10 abonados que realmente abandonarían.Recall: 84% → Detecta más de 8 de cada 10 abonados que realmente abandonarían, mejorando la identificación de riesgo frente al entrenamiento.
+                    - **`Recall`**: {recall} → Recall: 84% → Detecta más de 8 de cada 10 abonados que realmente abandonarían, mejorando la identificación de riesgo frente al entrenamiento.
 
                     **`Comparativa`**: El modelo mantiene un buen equilibrio entre identificar abandonos y evitar falsas alertas, demostrando robustez tras la validación del modelo elegido.
                             """)
-            
-
+          
+            # Unir los datos de las predicciones con los datos originales de las personas
             df_persona_exp3 = df_archivo_preds_ex3.merge(df_archivo_persona_ex3, on='IdPersona', how='left')
-            # Unir ambos DataFrames utilizando la columna "IdPersona"
+             # Unir los datos de validación con el DataFrame combinado de predicciones y personas
             df_final_persona = pd.merge(df_persona_exp3, df_validacion[['IdPersona', "DiasActivo", "TotalVisitas", 'Edad', "VisitasPrimerTrimestre", "VisitasUlt180",  "TienePagos", "VisitasUlt90",
                                                                    "VisitasUltimoTrimestre", "EstFav_otono", "EstFav_verano"]], on='IdPersona', how='left', suffixes=('', '_inicial'))
            
-             # Contar los valores y reordenarlos según tu preferencia
-
+            
+            # Crear el gráfico de distribución por proporción de abandono según los datos procesados
             with col2_inf:
 
                 st.markdown("<h5 style='color: #888;'>Proporción de clientes por rango de abandono:</h5>", unsafe_allow_html=True)
                 
+                # Crear un gráfico de pie para mostrar la distribución por edad de los clientes
                 fig_piechart= piechart_edad(df_final_persona)
                 # Mostrar el  en Streamlit
                 st.pyplot(fig_piechart)
 
             col1results,col2results= st.columns(2)
-           
+    
+            # Función que cuenta los resultados de clientes activos y abandonados
             grouped_activos_reset, grouped_abandonados_reset=  tabla_recuento_resultados(df_final_persona)
   
             with col1results: 
@@ -547,11 +664,13 @@ with tabs[3]:
                 st.markdown("<h3 style='color: #888;'>Clientes Abandonados:</h3>", unsafe_allow_html=True)
                 st.table(grouped_abandonados_reset)  # Mostrar tabla de clientes abandonados
             
+            # Mostrar los factores que afectan la probabilidad de abandono
             st.markdown("<h3 style='color: #888;'>Factores que afectan la probabilidad de abandono:</h3>", unsafe_allow_html=True)
 
-            
+            # Llamar a la función de categorización de variables de importancia
             df_final_persona= categorizacion_variables_importancia(df_final_persona)
             
+            # Crear una lista de opciones para elegir qué gráfico mostrar
             opciones = [
                 "Probabilidad de Abandono por Grupos de Edad",
                 "Probabilidad de Abandono por Grupos de Días Activos",
@@ -561,26 +680,27 @@ with tabs[3]:
                 "Probabilidad de Abandono por si Tiene Pagos"
             ]
 
+            # Crear un selector para que el usuario elija qué gráfico quiere ver
             eleccion = st.selectbox("Elige un gráfico para ver:", opciones)
 
-            # Mostrar gráfico según la selección
+            # Llamar a la función que muestra el gráfico elegido y su descripción
             mostrar_grafico_y_descripcion(eleccion, df_final_persona)          
            
             
-            # Título y descripción
+            # Título para la sección de estrategias de fidelización
             st.markdown("<h3 style='color: #888;'>Estrategias de Fidelización:</h3>", unsafe_allow_html=True)
             st.markdown("Selecciona el nivel de riesgo de abandono de los usuarios para ver las estrategias de fidelización recomendadas.")
 
             
 
-            # Selector de riesgo
+            # Selector para elegir el nivel de riesgo de abandono
             nivel_riesgo = st.selectbox("Selecciona el Nivel de Riesgo:", 
                                         ["Muy Bajo", "Bajo", "Medio", "Alto", "Muy Alto"])
 
-            # Mostrar estrategias según el nivel
+            # Mostrar las estrategias según el nivel de riesgo seleccionado
             mostrar_estrategias(nivel_riesgo)
 
-
+# Agregar un pie de página con los detalles de contacto
 st.markdown("""<footer style='text-align:center; font-size:12px; color:#888;'>
     <p> © 2025 Cesc Blanco | Contacto: <a href='mailto:cesc.blanco98@gmail.com'>cesc.blanco98@gmail.com</a> | 
              Sígueme en LinkedIn: <a href='https://www.linkedin.com/in/cescblanco' target='_blank'>LinkedIn</a> </p></footer>""", unsafe_allow_html=True)
