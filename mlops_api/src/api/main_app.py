@@ -10,9 +10,10 @@ import joblib
 import json
 from datetime import datetime
 import random
+
 # PATH para guardar predicciones.
-PREDICCIONES_PATH = "data_mlops_api/predicciones_api.csv"
-mlflow.set_tracking_uri("file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns")
+PREDICCIONES_PATH = "mlops_api/data_mlops_api/predicciones_api.csv"
+mlflow.set_tracking_uri("file:./mlruns")
 
 # Función utilitaria para cargar el scaler dinámicamente.
 def obtener_scaler_dinamico(client, run_id):
@@ -217,11 +218,11 @@ print("Detalles del mejor scaler:", scaler)
 
 
 # Cargar columnas esperadas.
-with open("src/api/columnas_modelo3.txt") as f:
+with open("mlops_api/src/api/columnas_modelo3.txt") as f:
     columnas_modelo3 = f.read().splitlines()
 
 # Cargar dataset de validación (para endpoint por ID).
-df_validation = pd.read_csv('data_mlops_api/df_validacion_inicial.csv')
+df_validation = pd.read_csv('mlops_api/data_mlops_api/df_validacion_inicial.csv')
 
 # Inicializar API
 app = FastAPI(title="API Abandono flexible")

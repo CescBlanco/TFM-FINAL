@@ -25,7 +25,7 @@ Este script configura el entorno de MLflow y entrena tres modelos con diferentes
 
 
 # Configuración de la URI para el seguimiento de MLflow
-mlflow.set_tracking_uri("file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM-FINAL/mlruns")
+mlflow.set_tracking_uri("file:./mlruns")
 
 # Entrenamiento de modelos con diferentes conjuntos de características
 entrenar_modelos("Experimento_v1", FEATURES_1)

@@ -106,7 +106,8 @@ def obtener_predicciones_api(endpoint: str, data: dict) -> dict | None:
     # Manejar cualquier excepción relacionada con la solicitud HTTP
     except requests.exceptions.RequestException as e:
         # Mostrar un mensaje de error en la interfaz de usuario si ocurre un error
-        st.error(f"❌ Error: {e}")
+        st.error(f"❌ Error: Identificación del abonado es incorrecto. No existe!" 
+                 "\nPor favor ingresar un abonado existente!")
         # Retornar None si ocurre algún error durante la solicitud
         return None
 

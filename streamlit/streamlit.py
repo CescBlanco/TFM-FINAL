@@ -29,7 +29,7 @@ st.set_page_config(page_title="App de Predicción de Abandono", layout="wide")
 st.markdown("<h1 style='text-align: center; color: #66BB6A;'>Predicción de Abandono: CEM Horta Esportiva</h1>", unsafe_allow_html=True)
 
 # Crear una barra de pestañas (tabs) para las diferentes opciones de la aplicación
-tabs = st.tabs([":bar_chart: Datos inventados", ":id: Un abonado", ":memo: Múltiples abonados", ":mag: Valoración modelos"])
+tabs = st.tabs([":bar_chart: Abonados con datos inventados", ":id: Un abonado", ":memo: Múltiples abonados", ":mag: Valoración modelos"])
 
 # ------------------- #
 # TAB 1: Datos individuales
@@ -41,7 +41,7 @@ with tabs[0]:
     st.markdown("<h2 style='color: #888;'>📝 Datos de Entrada del Abonado</h2>", unsafe_allow_html=True)
     
     # Texto solicitando que se ingresen los datos del abonado para realizar la predicción
-    st.write("Por favor, ingresa los datos del abonado para realizar la predicción.")
+    st.write("Por favor, ingresa los datos del abonado simulado para realizar la predicción.")
 
     # Llamada a la función input_userdata() para obtener los datos del usuario (esto es un supuesto, la función debería existir)
     userdata = input_userdata()  # Suponiendo que esta función obtiene los datos del usuario
@@ -49,13 +49,13 @@ with tabs[0]:
     st.write('----')
 
     # Título para la sección de predicción
-    st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #888;'>🔮 Realizar la predicción</h3>", unsafe_allow_html=True)
 
     # Instrucción para hacer clic en el botón para realizar la predicción
-    st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
+    st.write("Haz clic en el botón para realizar la predicción.")
 
     # Botón para iniciar la predicción para un abonado inventado
-    if st.button("🚀 Iniciar Predicción para un abonado inventado", key="btn_individual"):
+    if st.button("🚀 Iniciar predicción para el abonado.", key="btn_individual"):
         
         # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
@@ -192,18 +192,18 @@ with tabs[1]:
     st.markdown("<h2 style='color: #888;'>Predicción por un abonado</h2>", unsafe_allow_html=True)
 
     # Campo para ingresar el ID del abonado (un número entero)
-    id_persona = st.number_input("Introduce el ID de la persona", min_value=0, step=1)
+    id_persona = st.number_input("Introduce el ID del cliente", min_value=0, step=1)
 
     st.write('----')
 
     # Subtítulo para la sección de predicción
-    st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #888;'>🔮 Realizar la predicción</h3>", unsafe_allow_html=True)
 
     # Instrucciones para el usuario sobre el botón de predicción
-    st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.") 
+    st.write("Haz clic en el botón para realizar la predicción.") 
 
     # Botón que inicia la predicción cuando es presionado
-    if st.button("🚀 Iniciar Predicción por un abonado", key="btn_id"):
+    if st.button("🚀 Iniciar predicción por un abonado", key="btn_id"):
         
         # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
@@ -321,19 +321,19 @@ with tabs[1]:
 with tabs[2]:
 
     # Título para la sección de predicción por múltiples abonados
-    st.markdown("<h2 style='color: #888;'>Predicción por múltiples abonados</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #888;'>Predicción para múltiples abonados</h2>", unsafe_allow_html=True)
 
     # Campo de entrada para que el usuario introduzca una lista de IDs separados por comas
-    ids_input = st.text_area("Introduce los IDs de los abonados separados por comas", value="123,456,789")
+    ids_input = st.text_area("Introduce los diferentes IDs de los abonados, separados por comas", value="123,456,789")
 
     # Subtítulo para la sección de predicción
-    st.markdown("<h3 style='color: #888;'>🔮 Realizar predicción</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #888;'>🔮 Realizar la predicción</h3>", unsafe_allow_html=True)
 
     # Instrucciones para el usuario sobre el botón de predicción
-    st.write("Haz clic en el botón para realizar la predicción sobre el abandono del abonado.")
+    st.write("Haz clic en el botón para realizar la predicción.")
 
     # Botón para iniciar la predicción para múltiples abonados
-    if st.button("🚀 Iniciar Predicción por múltiples abonados", key="btn_ids"):
+    if st.button("🚀 Iniciar predicción por múltiples abonados", key="btn_ids"):
 
         # Crear un contenedor vacío para el mensaje de "Calculando..."
         calculating_message = st.empty()
@@ -353,13 +353,91 @@ with tabs[2]:
             
             # Obtener la respuesta de la API para la predicción
             response = obtener_predicciones_api("predecir_abandono_por_ids/", data)
+            
 
             # Si no se obtuvo respuesta de la API, mostrar un mensaje de error
             if not response:
                 st.error("⚠️ No se obtuvo respuesta de la API.")
+            
             else:
+                all_success = True 
+                # Procesar cada predicción de forma independiente
+                for prediccion in response:
+                    # Verificar si la respuesta contiene algún error para este ID
+                    if "error" in prediccion:  # Si encontramos un error en alguno de los abonados
+                        st.error(f"⚠️ El ID {prediccion.get('IdPersona')} no es válido: {prediccion.get('error')}")
+                        st.error(f"⚠️ Por favor... ingrese los IDs de los abonadados que existan!")
+                        continue  # Continuar con la siguiente predicción (si la hay)
+             
+           
 
-                 # Usamos st.empty() para crear un contenedor vacío
+                    # Usamos st.empty() para crear un contenedor vacío
+                    success_message = st.empty()
+                    # Mostrar el mensaje de éxito
+                    success_message.success("✅ Predicción obtenida")
+                    # Esperamos un segundo antes de borrar el mensaje
+                    time.sleep(1)
+                    # Borramos el mensaje de éxito
+                    success_message.empty()
+
+                
+            
+
+                    # Asegurarse de que la predicción tenga la estructura correcta
+                    id_persona = prediccion.get("IdPersona")
+                    nivel_riesgo = prediccion.get("NivelRiesgo")
+                    
+                    st.write("---")
+                    st.write(f"### Predicción para el abonado con ID {id_persona}")
+
+                    # --- 1. Probabilidad de abandono ---
+                    probabilidad = prediccion.get("ProbabilidadAbandono", 0)  # Obtener la probabilidad de abandono de la predicción
+                    color, nivel = color_con_riesgo(probabilidad) # Obtener el color y nivel de riesgo según la probabilidad
+                    
+                    st.markdown(
+                        f"""
+                        <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
+                            Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel})
+                        </div>
+                        """,
+                        unsafe_allow_html=True)
+                    
+                    # --- 2. Variables más importantes ---
+
+                    # Verificar si la respuesta contiene las características importantes
+                    if "CaracterísticasImportantes" in prediccion:
+
+                        df_top_filtered = preparar_df_importancias(prediccion) # Preparar el dataframe de variables importantes
+                        fig_importancias_abonado = plot_abonado_importancias(df_top_filtered) # Graficar las variables importantes
+                        st.pyplot(fig_importancias_abonado)  # Mostrar el gráfico
+
+                        # Generar un resumen de riesgo basado en las variables
+                        frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
+                        st.markdown(f"**Resumen del riesgo**: {frase_resumen}")
+
+                    # --- 3. Explicación del modelo ---
+                    # Explicar el comportamiento del riesgo del abonado
+                    st.markdown("### Comportamiento del riesgo: ")
+                    generar_explicacion_contexto(df_top_filtered) # Llamar a la función que genera la explicación
+
+                    # --- 4. Estrategias de fidelización ---
+
+                    # Verificar si existen estrategias de fidelización para este nivel de riesgo
+                    if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
+                        
+                        # Mostrar las estrategias de fidelización en una sección expandible
+                        with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
+                            for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
+                                st.markdown(estrategia)
+                        
+                        st.balloons() # Mostrar globos como animación
+                    else:
+                        
+                        # Si no existen estrategias, mostrar un mensaje de advertencia
+                        st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
+                # Si todas las predicciones fueron exitosas, mostramos el mensaje de éxito
+            if all_success:
+                # Usamos st.empty() para crear un contenedor vacío
                 success_message = st.empty()
                 # Mostrar el mensaje de éxito
                 success_message.success("✅ Predicción obtenida")
@@ -367,73 +445,6 @@ with tabs[2]:
                 time.sleep(1)
                 # Borramos el mensaje de éxito
                 success_message.empty()
-
-                # Intentar parsear la respuesta si es una cadena JSON
-                try:
-                    if isinstance(response, str):  # Si la respuesta es una cadena
-                        response = json.loads(response)  # Convertir de JSON a diccionario
-                except json.JSONDecodeError as e:
-                    st.error(f"Error al parsear la respuesta JSON: {e}")
-
-                # Verificar si la respuesta es una lista (esperada cuando se predicen múltiples abonados)
-                if isinstance(response, list):  # Si la respuesta es una lista
-                    for prediccion in response:
-
-                        # Asegurarse de que la predicción tenga la estructura correcta
-                        id_persona = prediccion.get("IdPersona")
-                        nivel_riesgo = prediccion.get("NivelRiesgo")
-                        
-                        st.write("---")
-                        st.write(f"### Predicción para el abonado con ID {id_persona}")
-
-                        # --- 1. Probabilidad de abandono ---
-                        probabilidad = prediccion.get("ProbabilidadAbandono", 0)  # Obtener la probabilidad de abandono de la predicción
-                        color, nivel = color_con_riesgo(probabilidad) # Obtener el color y nivel de riesgo según la probabilidad
-                        
-                        st.markdown(
-                            f"""
-                            <div style='background-color:{color}; padding:10px; border-radius:5px; text-align:center; color:black; font-size:24px'>
-                                Probabilidad de abandono: {probabilidad:.2%} (Nivel de Riesgo: {nivel})
-                            </div>
-                            """,
-                            unsafe_allow_html=True)
-                        
-                        # --- 2. Variables más importantes ---
-
-                        # Verificar si la respuesta contiene las características importantes
-                        if "CaracterísticasImportantes" in prediccion:
-
-                            df_top_filtered = preparar_df_importancias(prediccion) # Preparar el dataframe de variables importantes
-                            fig_importancias_abonado = plot_abonado_importancias(df_top_filtered) # Graficar las variables importantes
-                            st.pyplot(fig_importancias_abonado)  # Mostrar el gráfico
-
-                            # Generar un resumen de riesgo basado en las variables
-                            frase_resumen = generar_frase_resumen(df_top_filtered, nivel)
-                            st.markdown(f"**Resumen del riesgo**: {frase_resumen}")
-
-                        # --- 3. Explicación del modelo ---
-                        # Explicar el comportamiento del riesgo del abonado
-                        st.markdown("### Comportamiento del riesgo: ")
-                        generar_explicacion_contexto(df_top_filtered) # Llamar a la función que genera la explicación
-
-                        # --- 4. Estrategias de fidelización ---
-
-                        # Verificar si existen estrategias de fidelización para este nivel de riesgo
-                        if nivel_riesgo in ESTRATEGIAS_FIDELIZACION:
-                            
-                            # Mostrar las estrategias de fidelización en una sección expandible
-                            with st.expander(f"Estrategias de fidelización para el abonado con ID **{id_persona}** (Nivel de Riesgo: {nivel_riesgo})"):
-                                for estrategia in ESTRATEGIAS_FIDELIZACION[nivel_riesgo]:
-                                    st.markdown(estrategia)
-                            
-                            st.balloons() # Mostrar globos como animación
-                        else:
-                            
-                            # Si no existen estrategias, mostrar un mensaje de advertencia
-                            st.warning(f"No se encontraron estrategias para el nivel de riesgo: {nivel_riesgo}")
-                else:
-                    # Si la respuesta no es una lista válida, mostrar un error
-                    st.error("La respuesta no es una lista válida.")
 
         except ValueError:
             # Si el usuario introduce un valor no válido (por ejemplo, letras en lugar de números), mostrar un error

@@ -18,11 +18,9 @@ Estos conjuntos de características se utilizan para realizar entrenamientos y v
 
 """
 
-
-
 # Definición de las rutas de los archivos de datos
-DATA_PATH = os.path.join( "data_mlops_api", "dataframe_final_abonado.csv")
-VALIDATION_OUTPUT_PATH = os.path.join( "data_mlops_api")
+DATA_PATH = os.path.join( "mlops_api/data_mlops_api", "dataframe_final_abonado.csv")
+VALIDATION_OUTPUT_PATH = os.path.join( "mlops_api/data_mlops_api")
 
 # Definición de las características a usar en los diferentes experimentos
 FEATURES_1 = [
