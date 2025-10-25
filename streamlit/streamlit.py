@@ -471,7 +471,8 @@ with tabs[3]:
         if view_option == 'Mostrar modelo entrenado':
 
             # Leer el archivo CSV con el modelo inicial entrenado (archivo con datos históricos)
-            file_path_inicial = 'mlops_api\data_mlops_api\dataframe_final_abonado.csv'
+            file_path_inicial = "https://raw.githubusercontent.com/CescBlanco/TFM-FINAL/main/mlops_api/data_mlops_api/dataframe_final_abonado.csv"
+
             df_modelo_inicial = pd.read_csv(file_path_inicial)
             
             # Título y justificación del Experimento 1
