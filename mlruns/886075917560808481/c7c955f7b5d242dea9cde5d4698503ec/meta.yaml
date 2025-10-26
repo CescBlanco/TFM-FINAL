@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM_FINAL/mlruns/886075917560808481/c7c955f7b5d242dea9cde5d4698503ec/artifacts
+end_time: 1761513698523
+entry_point_name: ''
+experiment_id: '886075917560808481'
+lifecycle_stage: active
+run_id: c7c955f7b5d242dea9cde5d4698503ec
+run_name: Random Forest
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761513692113
+status: 3
+tags: []
+user_id: cescb

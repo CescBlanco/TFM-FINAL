@@ -32,9 +32,9 @@ METRIC= 'auc'
 
 
 #RUN IDs para las validaciones del experimento 1 y 2.
-RUN_ID_INF_1= '7ec94007ba584b68b695afa7e79825cc'
-RUN_ID_INF_2= '217f131f5f8246d0b56d201738790051'     
-RUN_ID_INF_3 = "73233a8103ba4517bdd5f7f9b4b2576e"  #RunID pegado despuès de encontrarlo en MLFLow IU (experimento3)
+RUN_ID_INF_1= '7eb484906b284201b10d0623187587fe'
+RUN_ID_INF_2= 'd2deae8a539042ef8cf14b1ddb2e2b63'     
+RUN_ID_INF_3 = "eabbb4c580a44873a88975d30d713134"  #RunID pegado despuès de encontrarlo en MLFLow IU (experimento3)
 
 
 
@@ -494,7 +494,7 @@ def piechart_edad(df: pd.DataFrame) -> plt.Figure:
     """
 
     # Obtener la cuenta de los valores únicos de 'nivel_riesgo' y reordenarlos según los niveles establecidos
-    nivel_riesgo_counts = df["nivel_riesgo"].value_counts().reindex(["Muy bajo", "Bajo", "Medio", "Alto", "Muy Alto"])  
+    nivel_riesgo_counts = df["nivel_riesgo"].value_counts().reindex(["Muy bajo", "Bajo", "Medio", "Alto", "Muy alto"])  
 
     # Crear el gráfico de torta (pie chart)
     fig, ax = plt.subplots(figsize=(6, 6))

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/cescb/OneDrive/Documents/Proyecto_python_Evolve/TFM_FINAL/mlruns/366146517155505435/82fdbf61a6484a509d338d0b45577031/artifacts
+end_time: 1761513790446
+entry_point_name: ''
+experiment_id: '366146517155505435'
+lifecycle_stage: active
+run_id: 82fdbf61a6484a509d338d0b45577031
+run_name: KNN
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761513783898
+status: 3
+tags: []
+user_id: cescb

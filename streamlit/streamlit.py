@@ -457,7 +457,7 @@ with tabs[3]:
         
         # Leer los archivos de los diferentes experimentos de inferencia
         df_archivo_global_exp3, df_archivo_persona_ex3, df_archivo_preds_ex3 = encontrar_csv_inferencias(NAME_EXPERIMENT_3, FOLDER_DESTINO_3, RUN_ID_INF_3)
-        df_archivo_global_exp2, df_archivo_persona_ex2, df_archivo_preds_ex2 = encontrar_csv_inferencias(NAME_EXPERIMENT_2, FOLDER_DESTINO_3, RUN_ID_INF_2)
+        df_archivo_global_exp2, df_archivo_persona_ex2, df_archivo_preds_ex2 = encontrar_csv_inferencias(NAME_EXPERIMENT_2, FOLDER_DESTINO_2, RUN_ID_INF_2)
         df_archivo_global_exp1, df_archivo_persona_ex1, df_archivo_preds_ex1 = encontrar_csv_inferencias(NAME_EXPERIMENT_1, FOLDER_DESTINO_1, RUN_ID_INF_1)
 
         # Obtener las métricas de rendimiento del modelo para el experimento 3 (AUC, accuracy, F1, recall)
@@ -471,7 +471,7 @@ with tabs[3]:
         if view_option == 'Mostrar modelo entrenado':
 
             # Leer el archivo CSV con el modelo inicial entrenado (archivo con datos históricos)
-            file_path_inicial = "file_path_inicial = 'mlops_api\data_mlops_api\dataframe_final_abonado.csv'"
+            file_path_inicial =  'mlops_api\data_mlops_api\dataframe_final_abonado.csv'
 
             df_modelo_inicial = pd.read_csv(file_path_inicial)
             

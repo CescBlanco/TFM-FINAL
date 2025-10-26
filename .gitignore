@@ -207,24 +207,20 @@ marimo/_lsp/
 __marimo__/
 
 
-tfm_final_venv
+tfm_final_venv2
 
 *.xlsx
 
 
 # Ignorar un archivo específico
-abonados.ipynb
-accessos.ipynb
-economia.ipynb
-servicios.ipynb
-archivo_final.ipynb
-pruebas.ipynb
-models.ipynb
+*.ipynb
+data/*csv
 
 image.png
 image-1.png
 image-2.png
 image-3.png
 
+model
 
 

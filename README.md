@@ -13,7 +13,6 @@ RESUMEN ABONADOS
 | `AntiguedadAños`                                 | Años de antigüedad         | Ninguno                    | OK                                     |
 | `FechaInicioUltimoAbono`                         | Última fecha de abono      | Ninguno si ≤ fecha corte   | OK                                     |
 | `TipoUltimoAbono`                                | Tipo de abono              | Ninguno                    | OK                                     |
-| `Irregulares_`                                 | Comportamiento del usuario | **Alto** para `BajaFinal*` | Mantener solo `Activo*`                |
 | `DiasDesdeUltimoAbono` / `MesesDesdeUltimoAbono` | Tiempo desde último abono  | Ninguno                    | OK                                     |
 
 
@@ -21,7 +20,7 @@ SERVICIOS
 
 | Bloque                                                   | Qué mide                    | Riesgo de data leakage        | Recomendación               |
 | -------------------------------------------------------- | --------------------------- | ----------------------------- | --------------------------- |
-| `Total_conceptos_unicos`, `Total_tipos_servicios_unicos` | Diversidad de servicios     | Bajo (si se filtra por fecha) | Mantener, filtrar por fecha |
+| `Total_conceptos_unicos` | Diversidad de servicios     | Bajo (si se filtra por fecha) | Mantener, filtrar por fecha |
 | One-hot de `Concepto`, `TipoServicio`                    | Uso específico de servicios | Bajo (si se filtra)           | Mantener, filtrar por fecha |
 | Suma de one-hot por persona                              | Frecuencia de uso           | Bajo (si se filtra)           | Mantener                    |
 | `UsoServiciosExtra`                                      | Indica uso de servicios     | Ninguno                       | Mantener                    |
