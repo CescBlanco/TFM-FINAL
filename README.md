@@ -46,7 +46,7 @@ El proyecto sigue una metodología modular basada en **CRISP-DM** y principios d
 
 > 📷 **Figura 1. Arquitectura general del sistema**  
 
-![alt text](streamlit\assets\Arquitectura_proyecto.drawio.png)
+![alt text](streamlit/assets/Arquitectura_proyecto.drawio.png)
 
 Resumen de la arquitectura:
 
@@ -67,7 +67,7 @@ Resumen de la arquitectura:
     - Devuelve clase, probabilidad, nivel de riesgo y variables explicativas.
     > 📷 **Figura 2. Flujo interno de predicción en la API**  
 
-    ![alt text](streamlit\assets\Flujo_interno_API.drawio.png)
+    ![alt text](streamlit/assets/Flujo_interno_API.drawio.png)
 
 4. Dashboard Streamlit:
 
@@ -195,7 +195,7 @@ La colaboración con el centro deportivo reforzó la idea de que la IA es una he
 
 > 📷 **Figura 3. Flujo de usuario**  
 
-![alt text](streamlit\assets\Flujo_de_usuario.drawio.png)
+![alt text](streamlit/assets/Flujo_de_usuario.drawio.png)
 
 El director puede acceder al dashboard, consultar predicciones de riesgo y recibir recomendaciones de fidelización, cerrando el ciclo entre inferencia, visualización y acción sobre los abonados.
 
